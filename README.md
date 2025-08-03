@@ -226,7 +226,7 @@ This is a demo application showcasing Claude Code capabilities. While not active
 ### Development Workflow
 1. **Branching**: Follow our [Branching Strategy](./docs/BRANCHING_STRATEGY.md)
    - Use feature branches: `feat/`, `fix/`, `refactor/`, etc.
-   - Target `develop` branch for integration
+   - Target `main` branch for merging
    - Squash commits when merging
 
 2. **Commits**: Follow [Conventional Commits](./docs/CONVENTIONAL_COMMITS.md)

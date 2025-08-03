@@ -106,11 +106,11 @@ src/
 
 ## Next Steps
 Once you approve this plan, I'll:
-1. Create feature branch from develop
+1. Create feature branch from main
 2. Generate .NET project structure
 3. Implement health check endpoint
 4. Setup PostgreSQL in docker-compose
 5. Create unit test
-6. Make PR to develop for review
+6. Make PR to main for review
 
 Would you like to proceed with this plan, or would you prefer to adjust the approach?

@@ -6,7 +6,7 @@ This project uses a simplified GitHub Actions workflow for continuous integratio
 
 ## CI Pipeline (`ci.yml`)
 
-Runs on every push and pull request to `main` and `develop` branches.
+Runs on every push and pull request to the `main` branch.
 
 ### Jobs:
 
