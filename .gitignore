@@ -52,7 +52,6 @@ coverage/
 *.mdf
 *.ldf
 *.ndf
-Migrations/
 
 # Docker
 .docker/

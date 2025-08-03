@@ -1,12 +1,11 @@
 # Branching Strategy
 
-This project follows a feature branch workflow with conventional branch naming that aligns with our commit conventions.
+This project follows a simplified feature branch workflow with conventional branch naming.
 
 ## Branch Types
 
-### Main Branches
+### Main Branch
 - **`main`** - Production-ready code. Protected branch with required reviews.
-- **`develop`** - Integration branch for features. Next release candidate.
 
 ### Feature Branches
 Branch naming: `<type>/<ticket-number>-<brief-description>`
@@ -24,7 +23,6 @@ Branch naming: `<type>/<ticket-number>-<brief-description>`
 
 ### Special Branches
 - **`hotfix/`** - Emergency fixes to production
-- **`release/`** - Release preparation
 
 ## Examples
 
@@ -49,9 +47,9 @@ docs/api-endpoint-guide
 
 ### 1. Starting New Work
 ```bash
-# Update develop
-git checkout develop
-git pull origin develop
+# Update main
+git checkout main
+git pull origin main
 
 # Create feature branch
 git checkout -b feat/SP1-001-user-authentication
@@ -63,11 +61,11 @@ git commit -m "feat(auth): add email verification service"
 
 ### 2. Keeping Branch Updated
 ```bash
-# Regularly sync with develop
-git checkout develop
-git pull origin develop
+# Regularly sync with main
+git checkout main
+git pull origin main
 git checkout feat/SP1-001-user-authentication
-git rebase develop
+git rebase main
 ```
 
 ### 3. Completing Work
@@ -75,8 +73,8 @@ git rebase develop
 # Push branch
 git push origin feat/SP1-001-user-authentication
 
-# Create Pull Request to develop
-gh pr create --base develop --title "feat(auth): email verification flow" --body "..."
+# Create Pull Request to main
+gh pr create --base main --title "feat(auth): email verification flow" --body "..."
 ```
 
 ### 4. After PR Approval
@@ -87,24 +85,18 @@ gh pr merge --squash --delete-branch
 
 ## Branch Rules
 
-### Protected Branches
-**`main`**:
+### Protected Branch - Main
 - Require pull request reviews (1 minimum)
 - Require status checks to pass
 - Require branches to be up to date
 - Include administrators in restrictions
 - No force pushes
 
-**`develop`**:
-- Require pull request reviews
-- Require status checks to pass
-- No direct pushes
-
 ### Branch Policies
 1. **Delete after merge** - Keep repository clean
 2. **No long-lived branches** - Merge within 1 week
 3. **Rebase over merge** - Keep linear history on feature branches
-4. **Squash on merge** - Clean commit history in main branches
+4. **Squash on merge** - Clean commit history in main
 
 ## Pull Request Process
 
@@ -142,8 +134,8 @@ Closes #123
 
 ### Create Branch
 ```bash
-# From develop
-git checkout -b feat/SP1-001-feature-name develop
+# From main
+git checkout -b feat/SP1-001-feature-name main
 ```
 
 ### Rename Branch
@@ -172,19 +164,15 @@ git branch -vv
 
 ## CI/CD Integration
 
-Branches trigger different CI/CD workflows:
+All feature branches and main trigger CI workflows:
+- Run tests
+- Build validation
+- Linting checks
 
-- **`feat/*`** - Run tests, build, no deploy
-- **`fix/*`** - Run tests, build, no deploy
-- **`develop`** - Run tests, build, deploy to staging
-- **`main`** - Run tests, build, deploy to production
-- **`ci/*`** - Run modified workflows for testing
-
-## Commit Guidelines per Branch
+## Commit Guidelines
 
 - **Feature branches**: Regular commits with clear messages
-- **Develop**: Squashed commits from PRs
-- **Main**: Clean history with meaningful commits only
+- **Main**: Clean history with squashed commits from PRs
 
 ## Emergency Hotfix Process
 
@@ -198,9 +186,4 @@ git commit -m "fix(api): critical security vulnerability"
 # Push and create PR to main
 git push origin hotfix/critical-bug
 gh pr create --base main --title "hotfix: critical security fix"
-
-# After merge, sync to develop
-git checkout develop
-git pull origin main
-git push origin develop
 ```

@@ -17,6 +17,10 @@ dotnet add package FluentValidation.AspNetCore
 # Add for development
 dotnet add package Microsoft.EntityFrameworkCore.InMemory
 
+# Add for testing
+dotnet add package Microsoft.AspNetCore.Mvc.Testing
+dotnet add package FluentAssertions
+
 # Create initial migration
 dotnet ef migrations add InitialCreate
 dotnet ef database update
@@ -336,6 +340,7 @@ public class UserRepository : IUserRepository
 
 ### 10. Testing Pattern
 ```csharp
+// Always use FluentAssertions and Arrange/Act/Assert pattern
 public class UserServiceTests : IDisposable
 {
     private readonly AppDbContext _context;
@@ -358,16 +363,53 @@ public class UserServiceTests : IDisposable
     {
         // Arrange
         var orgId = TestData.OrganisationId;
+        const int expectedUserCount = 3;
         
         // Act
         var result = await _service.GetUsersAsync(orgId);
         
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(3, result.Users.Count);
+        using (new AssertionScope())
+        {
+            result.Should().NotBeNull();
+            result.Users.Should().HaveCount(expectedUserCount);
+            result.Users.Should().OnlyContain(u => u.OrganisationId == orgId);
+        }
     }
     
     public void Dispose() => _context.Dispose();
+}
+
+// API Integration Test Pattern
+public class UserEndpointsTests : IClassFixture<WebApplicationFactory<Program>>
+{
+    private readonly HttpClient _client;
+    
+    public UserEndpointsTests(WebApplicationFactory<Program> factory)
+    {
+        _client = factory.CreateClient();
+    }
+    
+    [Fact]
+    public async Task Get_Users_ReturnsSuccessAndCorrectContentType()
+    {
+        // Arrange
+        const string endpoint = "/api/v1/users";
+        _client.DefaultRequestHeaders.Authorization = 
+            new AuthenticationHeaderValue("Bearer", TestTokens.AdminToken);
+        
+        // Act
+        var response = await _client.GetAsync(endpoint);
+        var content = await response.Content.ReadAsStringAsync();
+        
+        // Assert
+        using (new AssertionScope())
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
+            content.Should().NotBeNullOrWhiteSpace();
+        }
+    }
 }
 ```
 
