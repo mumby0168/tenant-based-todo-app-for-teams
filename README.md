@@ -206,6 +206,21 @@ This is a demo application showcasing Claude Code capabilities. While not active
 - Documentation standards
 - CI/CD workflows
 
+### Development Workflow
+1. **Branching**: Follow our [Branching Strategy](./docs/BRANCHING_STRATEGY.md)
+   - Use feature branches: `feat/`, `fix/`, `refactor/`, etc.
+   - Target `develop` branch for integration
+   - Squash commits when merging
+
+2. **Commits**: Follow [Conventional Commits](./docs/CONVENTIONAL_COMMITS.md)
+   - Format: `type(scope): description`
+   - Examples: `feat(auth): add email verification`
+
+3. **Pull Requests**: 
+   - Must pass all tests
+   - Require code review
+   - Update documentation as needed
+
 ## 📄 License
 
 MIT License - See LICENSE file for details
