@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import {
   Box,
   Container,
@@ -14,19 +13,15 @@ import { useVerifyCode } from '../hooks/mutations/useVerifyCode';
 import { useRequestCode } from '../hooks/mutations/useRequestCode';
 import { OtpInput } from '../components/OtpInput';
 import { ResendTimer } from '../components/ResendTimer';
+import { useNavigateWhenUnauthenticated } from '../hooks/navigation/useNavigateWhenUnauthenticated';
 
 export function VerifyCode() {
   const navigate = useNavigate();
-  const pendingEmail = useAuthStore((state) => state.pendingEmail);
+  const { status, pendingEmail } = useAuthStore();
   const verifyCode = useVerifyCode();
   const requestCode = useRequestCode();
 
-  useEffect(() => {
-    // Redirect if no pending email
-    if (!pendingEmail) {
-      navigate('/login');
-    }
-  }, [pendingEmail, navigate]);
+  useNavigateWhenUnauthenticated();
 
   const handleCodeComplete = (code: string) => {
     if (pendingEmail) {
@@ -43,7 +38,7 @@ export function VerifyCode() {
     }
   };
 
-  if (!pendingEmail) return null;
+  if (status !== 'code_requested') return null;
 
   return (
     <Container component="main" maxWidth="xs">
@@ -95,7 +90,7 @@ export function VerifyCode() {
                 component="button"
                 variant="body2"
                 onClick={() => {
-                  useAuthStore.getState().clearPendingEmail();
+                  useAuthStore.getState().reset();
                   navigate('/login');
                 }}
               >

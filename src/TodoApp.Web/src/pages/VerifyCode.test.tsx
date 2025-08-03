@@ -21,26 +21,17 @@ describe('VerifyCode', () => {
   beforeEach(() => {
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
     // Set up auth store with pending email
-    useAuthStore.getState().setPendingEmail(TEST_EMAIL, false);
+    useAuthStore.getState().setCodeRequested(TEST_EMAIL);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
     // Clean up auth store after each test
-    useAuthStore.setState({
-      user: null,
-      currentTeam: null,
-      teams: [],
-      isAuthenticated: false,
-      token: null,
-      pendingEmail: null,
-      isNewUser: false,
-    });
+    useAuthStore.getState().reset()
   });
 
-  it('redirects to login if no pending email', async () => {
-    // Clear pending email
-    useAuthStore.getState().clearPendingEmail();
+  it('redirects to login if unauthenticated', async () => {
+    useAuthStore.getState().reset();
 
     renderWithProviders(<VerifyCode />);
 
@@ -133,15 +124,7 @@ describe('VerifyCode', () => {
     const user = userEvent.setup();
 
     // Clear the default state first
-    useAuthStore.setState({
-      user: null,
-      currentTeam: null,
-      teams: [],
-      isAuthenticated: false,
-      token: null,
-      pendingEmail: EXISTING_USER_EMAIL,
-      isNewUser: false,
-    });
+    useAuthStore.getState().setCodeRequested(EXISTING_USER_EMAIL);
 
     renderWithProviders(<VerifyCode />);
 
@@ -166,7 +149,7 @@ describe('VerifyCode', () => {
 
     // Should set auth state
     const authState = useAuthStore.getState();
-    expect(authState.isAuthenticated).toBe(true);
+    expect(authState.status).toBe('authenticated');
     expect(authState.user?.email).toBe(EXISTING_USER_EMAIL);
   });
 
@@ -174,7 +157,7 @@ describe('VerifyCode', () => {
     const user = userEvent.setup();
 
     // Set up as new user
-    useAuthStore.getState().setPendingEmail(NEW_USER_EMAIL, true);
+    useAuthStore.getState().setCodeRequested(NEW_USER_EMAIL);
 
     renderWithProviders(<VerifyCode />);
 
@@ -193,7 +176,7 @@ describe('VerifyCode', () => {
     // Should keep pending email and new user status
     const authState = useAuthStore.getState();
     expect(authState.pendingEmail).toBe(NEW_USER_EMAIL);
-    expect(authState.isNewUser).toBe(true);
+    expect(authState.status).toBe('awaiting_registration');
   });
 
   it('shows error for invalid code', async () => {

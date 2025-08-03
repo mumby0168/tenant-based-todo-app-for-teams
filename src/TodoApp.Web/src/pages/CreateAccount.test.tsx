@@ -20,9 +20,7 @@ describe('CreateAccount', () => {
 
   beforeEach(() => {
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
-    // Set up auth store as new user with pending email
-    useAuthStore.getState().setPendingEmail(NEW_USER_EMAIL, true);
-    useAuthStore.getState().setVerificationCode(TEST_CODE);
+    useAuthStore.getState().setAwaitingRegistration(NEW_USER_EMAIL, TEST_CODE);
   });
 
   afterEach(() => {
@@ -30,20 +28,9 @@ describe('CreateAccount', () => {
     useAuthStore.getState().logout();
   });
 
-  it('redirects to login if no pending email', async () => {
+  it('redirects to login if unauthenticated', async () => {
     // Clear pending email
-    useAuthStore.getState().clearPendingEmail();
-
-    renderWithProviders(<CreateAccount />);
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/login');
-    });
-  });
-
-  it('redirects to login if not a new user', async () => {
-    // Set as existing user
-    useAuthStore.getState().setPendingEmail(NEW_USER_EMAIL, false);
+    useAuthStore.getState().reset();
 
     renderWithProviders(<CreateAccount />);
 
@@ -196,7 +183,7 @@ describe('CreateAccount', () => {
 
     // Should set auth state
     const authState = useAuthStore.getState();
-    expect(authState.isAuthenticated).toBe(true);
+    expect(authState.status).toBe('authenticated');
     expect(authState.user?.displayName).toBe('John Doe');
     expect(authState.currentTeam?.name).toBe('My Awesome Team');
     expect(authState.currentTeam?.role).toBe('Admin');

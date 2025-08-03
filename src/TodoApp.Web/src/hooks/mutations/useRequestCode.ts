@@ -8,13 +8,12 @@ import type { RequestCodeRequest } from "../../types/auth.types";
 export function useRequestCode() {
     const navigate = useNavigate();
     const addNotification = useUiStore((state) => state.addNotification);
-    const setPendingEmail = useAuthStore((state) => state.setPendingEmail);
+    const setCodeRequested = useAuthStore((state) => state.setCodeRequested);
 
     return useMutation({
         mutationFn: (data: RequestCodeRequest) => authApi.requestCode(data),
         onSuccess: (response, variables) => {
-            // Store email in auth store for the verify step
-            setPendingEmail(variables.email, false); // We don't know if new user yet
+            setCodeRequested(variables.email);
             addNotification(response.message, 'success');
             navigate('/verify');
         },

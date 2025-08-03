@@ -7,21 +7,17 @@ import type { CompleteRegistrationRequest } from "../../types/auth.types";
 
 export function useCompleteRegistration() {
     const navigate = useNavigate();
-    const { setAuth, setRegistrationInProgress } = useAuthStore();
+    const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
     const addNotification = useUiStore((state) => state.addNotification);
 
     return useMutation({
-        mutationFn: (data: CompleteRegistrationRequest) => {
-            setRegistrationInProgress(true);
-            return authApi.completeRegistration(data);
-        },
+        mutationFn: (data: CompleteRegistrationRequest) => authApi.completeRegistration(data),
         onSuccess: (response) => {
-            setAuth(response.user, response.team, response.token, false);
+            setAuthenticated(response.user, response.team, response.token);
             addNotification('Account created successfully!', 'success');
             navigate('/');
         },
         onError: (error: Error) => {
-            setRegistrationInProgress(false);
             addNotification(error.message, 'error');
         },
     });

@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import {
   Box,
   Button,
@@ -8,13 +7,13 @@ import {
   Typography,
   Alert,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuthStore } from '../stores/auth-store';
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { useCompleteRegistration } from '../hooks/mutations/useCompleteRegistration';
+import { useNavigateWhenUnauthenticated } from '../hooks/navigation/useNavigateWhenUnauthenticated';
 
 // Validation schema matching backend requirements
 const createAccountSchema = yup.object({
@@ -33,8 +32,7 @@ const createAccountSchema = yup.object({
 type CreateAccountFormData = yup.InferType<typeof createAccountSchema>;
 
 export function CreateAccount() {
-  const navigate = useNavigate();
-  const { pendingEmail, isNewUser, verificationCode, isRegistrationInProgress } = useAuthStore();
+  const { pendingEmail, pendingCode } = useAuthStore();
   const completeRegistration = useCompleteRegistration();
 
   const form = useForm<CreateAccountFormData>({
@@ -46,27 +44,18 @@ export function CreateAccount() {
     },
   });
 
-  useEffect(() => {
-    // Redirect if no pending email or not a new user, but not during registration
-    if (!isRegistrationInProgress && (!pendingEmail || !isNewUser || !verificationCode)) {
-      navigate('/login');
-    }
-  }, [pendingEmail, isNewUser, verificationCode, isRegistrationInProgress, navigate]);
+  useNavigateWhenUnauthenticated();
 
   const onSubmit = (data: CreateAccountFormData) => {
-    if (!pendingEmail || !verificationCode) return;
+    if (!pendingEmail || !pendingCode) return;
 
     completeRegistration.mutate({
       email: pendingEmail,
-      code: verificationCode,
+      code: pendingCode,
       displayName: data.displayName,
       teamName: data.teamName,
     });
   };
-
-  if (!isRegistrationInProgress && (!pendingEmail || !isNewUser || !verificationCode)) {
-    return null;
-  }
 
   return (
     <Container component="main" maxWidth="xs">

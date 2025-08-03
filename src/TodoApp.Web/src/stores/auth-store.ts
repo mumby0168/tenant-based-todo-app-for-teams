@@ -15,25 +15,28 @@ export interface Team {
   role: string; // 'Admin' | 'Member'
 }
 
+type AuthStatus = 
+  | 'unauthenticated'
+  | 'code_requested' 
+  | 'awaiting_registration'
+  | 'authenticated';
+
 interface AuthState {
+  status: AuthStatus;
   user: User | null;
   currentTeam: Team | null;
   teams: Team[];
-  isAuthenticated: boolean;
   token: string | null;
 
-  // Verification flow state
+  // Temporary flow state
   pendingEmail: string | null;
-  isNewUser: boolean;
-  verificationCode: string | null;
-  isRegistrationInProgress: boolean;
+  pendingCode: string | null; // Only stored when needed for registration
 
   // Actions
-  setAuth: (user: UserInfo, team: TeamInfo, token: string, isNewUser: boolean) => void;
-  setPendingEmail: (email: string, isNewUser: boolean) => void;
-  setVerificationCode: (code: string) => void;
-  setRegistrationInProgress: (inProgress: boolean) => void;
-  clearPendingEmail: () => void;
+  setAuthenticated: (user: UserInfo, team: TeamInfo, token: string) => void;
+  setCodeRequested: (email: string) => void;
+  setAwaitingRegistration: (email: string, code: string) => void;
+  reset: () => void;
   switchTeam: (teamId: string) => void;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
@@ -42,17 +45,15 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
+      status: 'unauthenticated',
       user: null,
       currentTeam: null,
       teams: [],
-      isAuthenticated: false,
       token: null,
       pendingEmail: null,
-      isNewUser: false,
-      verificationCode: null,
-      isRegistrationInProgress: false,
+      pendingCode: null,
 
-      setAuth: (userInfo, teamInfo, token, isNewUser = false) => {
+      setAuthenticated: (userInfo, teamInfo, token) => {
         localStorage.setItem(AUTH_CONSTANTS.AUTH_TOKEN_KEY, token);
         const user: User = {
           id: userInfo.id,
@@ -65,29 +66,38 @@ export const useAuthStore = create<AuthState>()(
           role: teamInfo.role,
         };
         set({
+          status: 'authenticated',
           user,
           currentTeam: team,
           teams: [team], // For now, single team
-          isAuthenticated: true,
           token,
-          isNewUser: isNewUser
+          pendingEmail: null,
+          pendingCode: null,
         });
       },
 
-      setPendingEmail: (email, isNewUser) => {
-        set({ pendingEmail: email, isNewUser });
+      setCodeRequested: (email) => {
+        set({ 
+          status: 'code_requested',
+          pendingEmail: email,
+          pendingCode: null,
+        });
       },
 
-      setVerificationCode: (code) => {
-        set({ verificationCode: code });
+      setAwaitingRegistration: (email, code) => {
+        set({
+          status: 'awaiting_registration',
+          pendingEmail: email,
+          pendingCode: code,
+        });
       },
 
-      setRegistrationInProgress: (inProgress) => {
-        set({ isRegistrationInProgress: inProgress });
-      },
-
-      clearPendingEmail: () => {
-        set({ pendingEmail: null, isNewUser: false, verificationCode: null, isRegistrationInProgress: false });
+      reset: () => {
+        set({
+          status: 'unauthenticated',
+          pendingEmail: null,
+          pendingCode: null,
+        });
       },
 
       switchTeam: (teamId) => {
@@ -100,15 +110,13 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         localStorage.removeItem(AUTH_CONSTANTS.AUTH_TOKEN_KEY);
         set({
+          status: 'unauthenticated',
           user: null,
           currentTeam: null,
           teams: [],
-          isAuthenticated: false,
           token: null,
           pendingEmail: null,
-          isNewUser: false,
-          verificationCode: null,
-          isRegistrationInProgress: false,
+          pendingCode: null,
         });
       },
 
@@ -122,10 +130,10 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       partialize: (state) => ({
+        status: state.status,
         user: state.user,
         currentTeam: state.currentTeam,
         teams: state.teams,
-        isAuthenticated: state.isAuthenticated,
         token: state.token,
       }),
     }

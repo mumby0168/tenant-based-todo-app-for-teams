@@ -8,16 +8,14 @@ import type { VerifyCodeRequest } from '../../types/auth.types';
 
 export function useVerifyCode() {
   const navigate = useNavigate();
-  const { setAuth, setPendingEmail, setVerificationCode } = useAuthStore();
+  const { setAuthenticated, setAwaitingRegistration } = useAuthStore();
   const addNotification = useUiStore((state) => state.addNotification);
 
   return useMutation({
     mutationFn: (data: VerifyCodeRequest) => authApi.verifyCode(data),
     onSuccess: (response, variables) => {
       if (response.isNewUser) {
-        // New user needs to complete registration
-        setPendingEmail(variables.email, true);
-        setVerificationCode(variables.code); // Store the code for registration
+        setAwaitingRegistration(variables.email, variables.code);
         navigate('/register');
       } else if (response.user && response.token) {
         const mockTeam = {
@@ -25,7 +23,7 @@ export function useVerifyCode() {
           name: 'Default Team',
           role: AUTH_CONSTANTS.ADMIN_ROLE,
         };
-        setAuth(response.user, mockTeam, response.token, false);
+        setAuthenticated(response.user, mockTeam, response.token);
         addNotification('Welcome back!', 'success');
         navigate('/');
       }
