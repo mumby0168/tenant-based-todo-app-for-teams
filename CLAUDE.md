@@ -155,6 +155,28 @@ src/
     └── Program.cs     # App configuration
 ```
 
+## Branching Strategy
+
+Create branches following the pattern: `<type>/<ticket>-<description>`
+
+```bash
+# Examples
+feat/SP1-001-email-verification
+fix/SP2-045-todo-duplication
+refactor/SP3-023-service-layer
+ci/add-e2e-tests
+
+# Workflow
+git checkout develop
+git pull origin develop
+git checkout -b feat/SP1-001-new-feature
+# ... work and commit ...
+git push origin feat/SP1-001-new-feature
+gh pr create --base develop
+```
+
+See [Branching Strategy](docs/BRANCHING_STRATEGY.md) for full details.
+
 ## Quick Checklist
 Before committing:
 - [ ] Run `npm test` (frontend)
@@ -163,3 +185,5 @@ Before committing:
 - [ ] Verify no hardcoded values
 - [ ] Ensure proper error handling
 - [ ] Update tests for new code
+- [ ] Branch follows naming convention
+- [ ] Commits follow conventional format
