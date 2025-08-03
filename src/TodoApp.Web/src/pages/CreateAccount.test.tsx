@@ -15,18 +15,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Mock sessionStorage
-const mockSessionStorage = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
-
-Object.defineProperty(window, 'sessionStorage', {
-  value: mockSessionStorage,
-});
-
 describe('CreateAccount', () => {
   const mockNavigate = vi.fn();
 
@@ -34,8 +22,7 @@ describe('CreateAccount', () => {
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
     // Set up auth store as new user with pending email
     useAuthStore.getState().setPendingEmail(NEW_USER_EMAIL, true);
-    // Mock verified code in session storage
-    mockSessionStorage.getItem.mockReturnValue(TEST_CODE);
+    useAuthStore.getState().setVerificationCode(TEST_CODE);
   });
 
   afterEach(() => {
@@ -46,9 +33,9 @@ describe('CreateAccount', () => {
   it('redirects to login if no pending email', async () => {
     // Clear pending email
     useAuthStore.getState().clearPendingEmail();
-    
+
     renderWithProviders(<CreateAccount />);
-    
+
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
@@ -57,9 +44,9 @@ describe('CreateAccount', () => {
   it('redirects to login if not a new user', async () => {
     // Set as existing user
     useAuthStore.getState().setPendingEmail(NEW_USER_EMAIL, false);
-    
+
     renderWithProviders(<CreateAccount />);
-    
+
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
@@ -67,33 +54,33 @@ describe('CreateAccount', () => {
 
   it('renders create account form with correct elements', async () => {
     renderWithProviders(<CreateAccount />);
-    
+
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /Create Your Account/i })).toBeInTheDocument();
     });
-    
+
     expect(screen.getByText(/Let's set up your account and first team/i)).toBeInTheDocument();
-    
+
     expect(screen.getByLabelText(/Display Name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Team Name/i)).toBeInTheDocument();
-    
+
     expect(screen.getByRole('button', { name: /Create Account/i })).toBeInTheDocument();
     expect(screen.getByText(/By creating an account, you'll become the admin of your team/i)).toBeInTheDocument();
   });
 
   it('shows helper text for inputs', async () => {
     renderWithProviders(<CreateAccount />);
-    
+
     await waitFor(() => {
       expect(screen.getByText(/This is how you'll appear to your team/i)).toBeInTheDocument();
     });
-    
+
     expect(screen.getByText(/You can invite others to this team later/i)).toBeInTheDocument();
   });
 
   it('disables submit button when form is invalid', async () => {
     renderWithProviders(<CreateAccount />);
-    
+
     await waitFor(() => {
       const submitButton = screen.getByRole('button', { name: /Create Account/i });
       expect(submitButton).toBeDisabled();
@@ -103,23 +90,23 @@ describe('CreateAccount', () => {
   it('validates display name length', async () => {
     const user = userEvent.setup();
     renderWithProviders(<CreateAccount />);
-    
+
     const displayNameInput = screen.getByLabelText(/Display Name/i);
     const submitButton = screen.getByRole('button', { name: /Create Account/i });
-    
+
     // Too short
     await user.type(displayNameInput, 'A');
     await user.tab();
-    
+
     await waitFor(() => {
       expect(screen.getByText(/Must be at least 2 characters/i)).toBeInTheDocument();
       expect(submitButton).toBeDisabled();
     });
-    
+
     // Valid length
     await user.clear(displayNameInput);
     await user.type(displayNameInput, 'John Doe');
-    
+
     // Still need team name
     expect(submitButton).toBeDisabled();
   });
@@ -127,25 +114,25 @@ describe('CreateAccount', () => {
   it('validates team name length', async () => {
     const user = userEvent.setup();
     renderWithProviders(<CreateAccount />);
-    
+
     const teamNameInput = screen.getByLabelText(/Team Name/i);
     const displayNameInput = screen.getByLabelText(/Display Name/i);
-    
+
     // Fill display name first
     await user.type(displayNameInput, 'John Doe');
-    
+
     // Too short team name
     await user.type(teamNameInput, 'AB');
     await user.tab();
-    
+
     await waitFor(() => {
       expect(screen.getByText(/Team name must be at least 3 characters/i)).toBeInTheDocument();
     });
-    
+
     // Valid team name
     await user.clear(teamNameInput);
     await user.type(teamNameInput, 'My Team');
-    
+
     const submitButton = screen.getByRole('button', { name: /Create Account/i });
     await waitFor(() => {
       expect(submitButton).toBeEnabled();
@@ -155,31 +142,31 @@ describe('CreateAccount', () => {
   it('validates maximum lengths', async () => {
     const user = userEvent.setup();
     renderWithProviders(<CreateAccount />);
-    
+
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /Create Your Account/i })).toBeInTheDocument();
     });
-    
+
     const displayNameInput = screen.getByLabelText(/Display Name/i);
     const teamNameInput = screen.getByLabelText(/Team Name/i);
-    
+
     // Type very long display name (more than 100 chars)
     const longDisplayName = 'A'.repeat(101);
     await user.type(displayNameInput, longDisplayName);
     await user.tab();
-    
+
     await waitFor(() => {
       expect(screen.getByText(/Must not exceed 100 characters/i)).toBeInTheDocument();
     });
-    
+
     // Type very long team name (more than 50 chars)
     await user.clear(displayNameInput);
     await user.type(displayNameInput, 'John Doe');
-    
+
     const longTeamName = 'T'.repeat(51);
     await user.type(teamNameInput, longTeamName);
     await user.tab();
-    
+
     await waitFor(() => {
       expect(screen.getByText(/Team name must not exceed 50 characters/i)).toBeInTheDocument();
     });
@@ -188,25 +175,25 @@ describe('CreateAccount', () => {
   it('submits form and navigates to dashboard on success', async () => {
     const user = userEvent.setup();
     renderWithProviders(<CreateAccount />);
-    
+
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /Create Your Account/i })).toBeInTheDocument();
     });
-    
+
     const displayNameInput = screen.getByLabelText(/Display Name/i);
     const teamNameInput = screen.getByLabelText(/Team Name/i);
     const submitButton = screen.getByRole('button', { name: /Create Account/i });
-    
+
     await user.type(displayNameInput, 'John Doe');
     await user.type(teamNameInput, 'My Awesome Team');
-    
+
     await user.click(submitButton);
-    
+
     // Should navigate to dashboard
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/');
     });
-    
+
     // Should set auth state
     const authState = useAuthStore.getState();
     expect(authState.isAuthenticated).toBe(true);
@@ -217,11 +204,11 @@ describe('CreateAccount', () => {
 
   it('shows error when registration fails', async () => {
     const user = userEvent.setup();
-    
+
     server.use(
       http.post('http://localhost:5050/api/v1/auth/complete-registration', () => {
         return HttpResponse.json(
-          { 
+          {
             title: 'Team name already exists',
             detail: 'A team with this name already exists',
             status: 400
@@ -230,60 +217,38 @@ describe('CreateAccount', () => {
         );
       })
     );
-    
+
     renderWithProviders(<CreateAccount />);
-    
+
     const displayNameInput = screen.getByLabelText(/Display Name/i);
     const teamNameInput = screen.getByLabelText(/Team Name/i);
     const submitButton = screen.getByRole('button', { name: /Create Account/i });
-    
+
     await user.type(displayNameInput, 'John Doe');
     await user.type(teamNameInput, 'Existing Team');
-    
+
     await user.click(submitButton);
-    
+
     await waitFor(() => {
       expect(screen.getByText(/A team with this name already exists/i)).toBeInTheDocument();
     });
   });
 
-  it('uses verified code from session storage', async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<CreateAccount />);
-    
-    const displayNameInput = screen.getByLabelText(/Display Name/i);
-    const teamNameInput = screen.getByLabelText(/Team Name/i);
-    const submitButton = screen.getByRole('button', { name: /Create Account/i });
-    
-    await user.type(displayNameInput, 'John Doe');
-    await user.type(teamNameInput, 'My Team');
-    
-    await user.click(submitButton);
-    
-    // Verify sessionStorage was accessed
-    expect(mockSessionStorage.getItem).toHaveBeenCalledWith('verified_code');
-    
-    // Wait for navigation to confirm submission worked
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/');
-    });
-  });
-
   it('shows placeholders for inputs', async () => {
     renderWithProviders(<CreateAccount />);
-    
+
     await waitFor(() => {
       const displayNameInput = screen.getByLabelText(/Display Name/i);
       expect(displayNameInput).toHaveAttribute('placeholder', 'John Doe');
     });
-    
+
     const teamNameInput = screen.getByLabelText(/Team Name/i);
     expect(teamNameInput).toHaveAttribute('placeholder', 'My Team');
   });
 
   it('disables inputs while submitting', async () => {
     const user = userEvent.setup();
-    
+
     // Add delay to mock handler to test loading state
     server.use(
       http.post('http://localhost:5050/api/v1/auth/complete-registration', async () => {
@@ -295,18 +260,18 @@ describe('CreateAccount', () => {
         });
       })
     );
-    
+
     renderWithProviders(<CreateAccount />);
-    
+
     const displayNameInput = screen.getByLabelText(/Display Name/i);
     const teamNameInput = screen.getByLabelText(/Team Name/i);
     const submitButton = screen.getByRole('button', { name: /Create Account/i });
-    
+
     await user.type(displayNameInput, 'John Doe');
     await user.type(teamNameInput, 'My Team');
-    
+
     await user.click(submitButton);
-    
+
     // Inputs should be disabled during submission
     expect(displayNameInput).toBeDisabled();
     expect(teamNameInput).toBeDisabled();

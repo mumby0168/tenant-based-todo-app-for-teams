@@ -13,8 +13,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuthStore } from '../stores/auth-store';
-import { useCompleteRegistration } from '../hooks/mutations/useAuth';
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { useCompleteRegistration } from '../hooks/mutations/useCompleteRegistration';
 
 // Validation schema matching backend requirements
 const createAccountSchema = yup.object({

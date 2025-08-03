@@ -63,7 +63,6 @@ describe('VerifyCode', () => {
     const inputs = screen.getAllByRole('textbox');
     expect(inputs).toHaveLength(6);
 
-    expect(screen.getByRole('button', { name: /Verify Code/i })).toBeInTheDocument();
     expect(screen.getByText(/Code expires in 15 minutes/i)).toBeInTheDocument();
   });
 
@@ -113,10 +112,6 @@ describe('VerifyCode', () => {
         expect(input).toHaveValue(TEST_CODE[index]);
       });
     });
-
-    // Should have triggered submission (button would be disabled)
-    const verifyButton = screen.getByRole('button', { name: /Verify Code/i });
-    expect(verifyButton).toBeEnabled(); // Since code is complete
   });
 
   it('only accepts numeric input', async () => {
@@ -132,30 +127,6 @@ describe('VerifyCode', () => {
     // Numeric should work
     await user.type(inputs[0], '1');
     expect(inputs[0]).toHaveValue('1');
-  });
-
-  it('disables verify button until all digits entered', async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<VerifyCode />);
-
-    const verifyButton = screen.getByRole('button', { name: /Verify Code/i });
-    const inputs = screen.getAllByRole('textbox');
-
-    expect(verifyButton).toBeDisabled();
-
-    // Enter 5 digits
-    for (let i = 0; i < 5; i++) {
-      await user.type(inputs[i], String(i + 1));
-    }
-
-    // Still disabled
-    expect(verifyButton).toBeDisabled();
-
-    // Enter last digit
-    await user.type(inputs[5], '6');
-
-    // Now enabled
-    expect(verifyButton).toBeEnabled();
   });
 
   it('verifies code and navigates for existing user', async () => {
@@ -214,9 +185,6 @@ describe('VerifyCode', () => {
       await user.type(inputs[i], TEST_CODE[i]);
     }
 
-    const verifyButton = screen.getByRole('button', { name: /Verify Code/i });
-    await user.click(verifyButton);
-
     // Should navigate to create account
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/register');
@@ -252,9 +220,6 @@ describe('VerifyCode', () => {
     for (let i = 0; i < 6; i++) {
       await user.type(inputs[i], '0');
     }
-
-    const verifyButton = screen.getByRole('button', { name: /Verify Code/i });
-    await user.click(verifyButton);
 
     await waitFor(() => {
       expect(screen.getByText(/The verification code is invalid or expired/i)).toBeInTheDocument();

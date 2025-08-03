@@ -11,8 +11,8 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { emailSchema, type EmailFormData } from '../schemas/auth.schema';
-import { useRequestCode } from '../hooks/mutations/useAuth';
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { useRequestCode } from '../hooks/mutations/useRequestCode';
 
 export function Login() {
   const requestCode = useRequestCode();
@@ -85,7 +85,7 @@ export function Login() {
             <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
               We'll send you a {AUTH_CONSTANTS.VERIFICATION_CODE_LENGTH}-digit code to sign in
             </Typography>
-            
+
             <Box sx={{ mt: 3, textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">
                 New user?{' '}

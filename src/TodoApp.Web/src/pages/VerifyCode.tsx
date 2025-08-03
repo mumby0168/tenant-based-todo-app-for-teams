@@ -1,10 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
-  Button,
   Container,
   Paper,
-  TextField,
   Typography,
   Link,
   LinearProgress,
@@ -12,8 +10,10 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
-import { useVerifyCode, useRequestCode } from '../hooks/mutations/useAuth';
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { useVerifyCode } from '../hooks/mutations/useVerifyCode';
+import { useRequestCode } from '../hooks/mutations/useRequestCode';
+import { OtpInput } from '../components/OtpInput';
 
 export function VerifyCode() {
   const navigate = useNavigate();
@@ -21,14 +21,12 @@ export function VerifyCode() {
   const verifyCode = useVerifyCode();
   const requestCode = useRequestCode();
 
-  const [code, setCode] = useState(['', '', '', '', '', '']);
   const [resendDisabled, setResendDisabled] = useState(true);
-  const [resendTimer, setResendTimer] = useState(AUTH_CONSTANTS.RESEND_COOLDOWN_SECONDS);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [resendTimer, setResendTimer] = useState<number>(AUTH_CONSTANTS.RESEND_COOLDOWN_SECONDS);
 
   useEffect(() => {
     // Redirect if no pending email
-    if (!pendingEmail && !code.some(digit => digit)) {
+    if (!pendingEmail) {
       navigate('/login');
       return;
     }
@@ -47,49 +45,11 @@ export function VerifyCode() {
     return () => clearInterval(timer);
   }, [pendingEmail, navigate]);
 
-  const handleCodeChange = (index: number, value: string) => {
-    // Only allow digits
-    if (value && !/^\d$/.test(value)) return;
-
-    const newCode = [...code];
-    newCode[index] = value;
-    setCode(newCode);
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    // Auto-submit when complete
-    if (value && index === 5 && newCode.every(digit => digit)) {
-      handleSubmit(newCode.join(''));
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').slice(0, 6);
-    if (/^\d+$/.test(pastedData)) {
-      const newCode = pastedData.split('').concat(Array(6).fill('')).slice(0, 6);
-      setCode(newCode);
-      if (pastedData.length === 6) {
-        handleSubmit(pastedData);
-      }
-    }
-  };
-
-  const handleSubmit = (codeString?: string) => {
-    const finalCode = codeString || code.join('');
-    if (finalCode.length === 6 && pendingEmail) {
+  const handleCodeComplete = (code: string) => {
+    if (pendingEmail) {
       verifyCode.mutate({
         email: pendingEmail,
-        code: finalCode,
+        code,
       });
     }
   };
@@ -99,7 +59,6 @@ export function VerifyCode() {
       setResendDisabled(true);
       setResendTimer(AUTH_CONSTANTS.RESEND_COOLDOWN_SECONDS);
       requestCode.mutate({ email: pendingEmail });
-      setCode(['', '', '', '', '', '']); // Clear the code
     }
   };
 
@@ -129,48 +88,12 @@ export function VerifyCode() {
           </Typography>
 
           <Box>
-            {/* OTP Input Fields */}
-            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 3 }}>
-              {code.map((digit, index) => (
-                <TextField
-                  key={index}
-                  inputRef={(el) => (inputRefs.current[index] = el)}
-                  value={digit}
-                  onChange={(e) => handleCodeChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  onPaste={index === 0 ? handlePaste : undefined}
-                  inputProps={{
-                    maxLength: 1,
-                    style: {
-                      textAlign: 'center',
-                      fontSize: '24px',
-                      fontWeight: '500',
-                    },
-                    'aria-label': `Digit ${index + 1}`,
-                    inputMode: 'numeric',
-                    pattern: '[0-9]*',
-                  }}
-                  sx={{
-                    width: 48,
-                    '& .MuiOutlinedInput-root': {
-                      height: 56,
-                    },
-                  }}
-                  disabled={verifyCode.isPending}
-                  autoFocus={index === 0}
-                />
-              ))}
+            <Box sx={{ mb: 3 }}>
+              <OtpInput
+                onComplete={handleCodeComplete}
+                disabled={verifyCode.isPending}
+              />
             </Box>
-
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={() => handleSubmit()}
-              disabled={code.join('').length !== 6 || verifyCode.isPending}
-              sx={{ mb: 2 }}
-            >
-              {verifyCode.isPending ? 'Verifying...' : 'Verify Code'}
-            </Button>
 
             {(verifyCode.isError || requestCode.isError) && (
               <Alert severity="error" sx={{ mb: 2 }}>
