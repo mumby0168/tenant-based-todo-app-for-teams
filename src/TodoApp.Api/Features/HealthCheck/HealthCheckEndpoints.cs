@@ -1,35 +1,33 @@
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using System.Text.Json;
-
 namespace TodoApp.Api.Features.HealthCheck;
 
 public static class HealthCheckEndpoints
 {
     public static WebApplication MapHealthCheckEndpoints(this WebApplication app)
     {
-        app.MapHealthChecks("/health", new HealthCheckOptions
-        {
-            ResponseWriter = async (context, report) =>
-            {
-                context.Response.ContentType = "application/json";
-
-                var response = new
-                {
-                    status = report.Status.ToString(),
-                    timestamp = DateTimeOffset.UtcNow,
-                    service = "TodoApp.Api"
-                };
-
-                var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    WriteIndented = true
-                });
-
-                await context.Response.WriteAsync(json);
-            }
-        });
+        app.MapGet("/health", GetHealth)
+            .WithName("GetHealth")
+            .WithSummary("Get the health status of the API")
+            .WithDescription("Returns the current health status of the TodoApp API service")
+            .WithTags("Health")
+            .Produces<HealthCheckResponse>(StatusCodes.Status200OK);
 
         return app;
     }
+
+    private static IResult GetHealth()
+    {
+        var response = new HealthCheckResponse(
+            Status: "Healthy",
+            Timestamp: DateTimeOffset.UtcNow,
+            Service: "TodoApp.Api"
+        );
+        
+        return Results.Ok(response);
+    }
 }
+
+public record HealthCheckResponse(
+    string Status,
+    DateTimeOffset Timestamp,
+    string Service
+);
