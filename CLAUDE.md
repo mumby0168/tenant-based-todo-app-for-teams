@@ -99,6 +99,34 @@ var claims = new[]
 - **E2E Tests**: Playwright for critical paths, test on Chrome/Firefox/Safari
 - **Performance**: API responses <200ms, Lighthouse score >90
 
+### Testing Best Practices
+- Use **FluentAssertions** for all test assertions
+- Use **AssertionScopes** for multiple related assertions
+- Follow **Arrange/Act/Assert** pattern strictly
+- Add descriptive messages to assertions when helpful
+
+```csharp
+// Example API Integration Test
+[Fact]
+public async Task Get_Endpoint_ReturnsExpectedResult()
+{
+    // Arrange
+    const string endpoint = "/api/v1/resource";
+    
+    // Act
+    var response = await _client.GetAsync(endpoint);
+    var content = await response.Content.ReadAsStringAsync();
+    
+    // Assert
+    using (new AssertionScope())
+    {
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        content.Should().NotBeNullOrWhiteSpace();
+        content.Should().Contain("expected value");
+    }
+}
+```
+
 ## Definition of Done
 - [ ] Code follows established patterns
 - [ ] Unit/Integration/E2E tests written
