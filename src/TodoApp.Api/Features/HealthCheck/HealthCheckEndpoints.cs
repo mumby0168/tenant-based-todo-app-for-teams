@@ -21,7 +21,7 @@ public static class HealthCheckEndpoints
             Timestamp: DateTimeOffset.UtcNow,
             Service: "TodoApp.Api"
         );
-        
+
         return Results.Ok(response);
     }
 }

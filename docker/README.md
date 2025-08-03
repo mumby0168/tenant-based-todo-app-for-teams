@@ -11,15 +11,15 @@ This directory contains Docker configuration for the TodoApp development environ
 
 ### PostgreSQL Database
 - **Image**: postgres:16-alpine
-- **Port**: 5433 (mapped from internal 5432)
+- **Port**: 5440 (mapped from internal 5432)
 - **Database**: todoapp_db
 - **Username**: todoapp
 - **Password**: todoapp_password
 
 ### MailDev (Development only)
 - **Image**: maildev/maildev
-- **Web UI Port**: 1080
-- **SMTP Port**: 1025
+- **Web UI Port**: 1090
+- **SMTP Port**: 1030
 
 ## Quick Start
 
@@ -60,17 +60,20 @@ This directory contains Docker configuration for the TodoApp development environ
 
 ## Accessing Services
 
-- **PostgreSQL**: `postgresql://todoapp:todoapp_password@localhost:5433/todoapp_db`
-- **MailDev Web UI**: http://localhost:1080
-- **MailDev SMTP**: `smtp://localhost:1025`
+- **PostgreSQL**: `postgresql://todoapp:todoapp_password@localhost:5440/todoapp_db`
+- **MailDev Web UI**: http://localhost:1090
+- **MailDev SMTP**: `smtp://localhost:1030`
 
 ## Troubleshooting
 
 ### Port Already in Use
 If you get a "port is already allocated" error, check what's using the port:
 ```bash
-lsof -i :5433  # For PostgreSQL
-lsof -i :1080  # For MailDev
+lsof -i :5440  # For PostgreSQL
+lsof -i :5050  # For API
+lsof -i :5180  # For Frontend
+lsof -i :1090  # For MailDev Web UI
+lsof -i :1030  # For MailDev SMTP
 ```
 
 ### Database Connection Issues

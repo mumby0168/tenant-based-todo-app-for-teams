@@ -41,9 +41,9 @@ export function Login() {
       >
         <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
           <Typography component="h1" variant="h4" align="center" gutterBottom>
-            TodoApp
+            TodoApp V1
           </Typography>
-          
+
           <Typography component="h2" variant="h6" align="center" gutterBottom>
             Sign in to your account
           </Typography>

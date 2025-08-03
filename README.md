@@ -46,7 +46,7 @@ This demo application showcases:
 - **Vite** for fast builds and HMR
 
 ### Backend
-- **.NET 8** with Minimal APIs
+- **.NET 9** with Minimal APIs
 - **Entity Framework Core** with PostgreSQL
 - **JWT Authentication** with multi-tenant support
 - **OpenTelemetry** for observability
@@ -67,23 +67,23 @@ This demo application showcases:
 │   ├── user-stories-*.md         # Feature specifications
 │   └── api-documentation.md      # API reference
 ├── src/
-│   ├── frontend/                 # React application
+│   ├── TodoApp.Web/             # React application
 │   │   ├── src/
 │   │   │   ├── apis/            # API client layer
 │   │   │   ├── components/      # React components
 │   │   │   ├── hooks/           # Custom hooks
 │   │   │   ├── pages/           # Route pages
 │   │   │   ├── stores/          # Zustand stores
-│   │   │   └── utils/           # Utilities
-│   │   └── Dockerfile
+│   │   │   └── schemas/         # Validation schemas
+│   │   ├── Dockerfile           # Production build
+│   │   └── Dockerfile.dev       # Development with hot reload
 │   └── TodoApp.Api/             # .NET API
 │       ├── Features/            # Feature modules
-│       │   ├── Authentication/
-│       │   ├── Teams/
-│       │   ├── Todos/
-│       │   └── Users/
-│       ├── Data/               # EF Core context
-│       └── Dockerfile
+│       │   └── HealthCheck/
+│       ├── Data/                # EF Core context
+│       ├── Migrations/          # Database migrations
+│       ├── Dockerfile           # Production build
+│       └── Dockerfile.dev       # Development with hot reload
 ├── .github/
 │   └── workflows/              # CI/CD pipelines
 ├── docker-compose.yml          # Local development
@@ -95,10 +95,10 @@ This demo application showcases:
 ### Prerequisites
 - Docker Desktop installed
 - Node.js 20+ (for local frontend development)
-- .NET 8 SDK (for local backend development)
+- .NET 9 SDK (for local backend development)
 - Git
 
-### Quick Start
+### Quick Start with Docker
 
 1. Clone the repository:
 ```bash
@@ -106,30 +106,47 @@ git clone https://github.com/your-username/team-todo-app.git
 cd team-todo-app
 ```
 
-2. Start the application:
+2. Start development environment:
 ```bash
-docker compose up -d
+./scripts/dev-start.sh
 ```
 
 3. Access the application:
-- Frontend: http://localhost:8080
-- API: http://localhost:8081/swagger
+- Frontend: http://localhost:5180
+- API: http://localhost:5050
+- API Docs: http://localhost:5050/swagger
+- MailDev: http://localhost:1090
 
-### Local Development
-
-For hot-reload development:
-
-**Frontend:**
+To stop:
 ```bash
-cd src/frontend
-npm install
-npm run dev
+./scripts/dev-stop.sh
 ```
+
+### Production Build
+
+Build and run production containers:
+```bash
+./scripts/prod-build.sh
+docker compose --profile production up -d
+```
+
+Production URLs:
+- Frontend: http://localhost:8080
+- API is proxied through nginx at http://localhost:8080/api
+
+### Local Development (without Docker)
 
 **Backend:**
 ```bash
 cd src/TodoApp.Api
 dotnet watch run
+```
+
+**Frontend:**
+```bash
+cd src/TodoApp.Web
+npm install
+npm run dev
 ```
 
 ## 🧪 Testing
@@ -143,9 +160,9 @@ docker compose -f docker-compose.test.yml up
 
 **Frontend tests:**
 ```bash
-cd src/frontend
+cd src/TodoApp.Web
 npm test                # Unit tests
-npm run test:e2e       # E2E tests
+npm run test:e2e       # E2E tests (when implemented)
 ```
 
 **Backend tests:**

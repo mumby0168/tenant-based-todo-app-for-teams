@@ -1,16 +1,14 @@
-version: '3.8'
-
 services:
   postgres:
     ports:
-      - "5433:5432"
-  
+      - "5440:5432"
+
   maildev:
     image: maildev/maildev
     container_name: todoapp-maildev
     ports:
-      - "1080:1080" # Web UI
-      - "1025:1025" # SMTP
+      - "1090:1080" # Web UI
+      - "1030:1025" # SMTP
     environment:
       MAILDEV_SMTP_PORT: 1025
       MAILDEV_WEB_PORT: 1080
