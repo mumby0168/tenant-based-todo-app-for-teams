@@ -1,9 +1,15 @@
+using Microsoft.EntityFrameworkCore;
+using TodoApp.Api.Data;
 using TodoApp.Api.Features.HealthCheck;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddHealthChecks();
+
+// Add Entity Framework Core with PostgreSQL
+builder.Services.AddDbContext<TodoAppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add OpenAPI/Swagger
 builder.Services.AddEndpointsApiExplorer();
