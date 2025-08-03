@@ -1,9 +1,9 @@
 import { http, HttpResponse } from 'msw';
-import { API_BASE_URL } from '../lib/api-client';
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
 
 export const handlers = [
   // Health check
-  http.get(`${API_BASE_URL}/health`, () => {
+  http.get('http://localhost:5050/api/v1/health', () => {
     return HttpResponse.json({
       status: 'Healthy',
       timestamp: new Date().toISOString(),
@@ -12,78 +12,71 @@ export const handlers = [
   }),
 
   // Authentication endpoints
-  http.post(`${API_BASE_URL}/auth/request-code`, async ({ request }) => {
+  http.post('http://localhost:5050/api/v1/auth/request-code', async ({ request }) => {
     const { email } = await request.json() as { email: string };
     
     console.log('Mock: Verification code requested for', email);
     
     return HttpResponse.json({
-      message: 'Verification code sent',
-      expiresIn: 900, // 15 minutes
+      message: AUTH_CONSTANTS.VERIFICATION_CODE_SENT,
     });
   }),
 
-  http.post(`${API_BASE_URL}/auth/verify`, async ({ request }) => {
+  http.post('http://localhost:5050/api/v1/auth/verify-code', async ({ request }) => {
     const { email, code } = await request.json() as { email: string; code: string };
     
     // Mock verification - accept code "123456"
     if (code === '123456') {
       const isNewUser = !email.includes('existing');
       
+      if (isNewUser) {
+        return HttpResponse.json({
+          token: '',
+          isNewUser: true,
+        });
+      }
+      
       return HttpResponse.json({
-        isNewUser,
         token: 'mock-jwt-token',
-        user: isNewUser ? null : {
+        isNewUser: false,
+        user: {
           id: '1',
           email,
-          name: 'Test User',
-          isEmailVerified: true,
+          displayName: 'Test User',
         },
-        team: isNewUser ? null : {
-          id: '1',
-          name: 'Test Team',
-          role: 'Owner',
-        },
-        teams: isNewUser ? [] : [{
-          id: '1',
-          name: 'Test Team',
-          role: 'Owner',
-        }],
       });
     }
     
     return HttpResponse.json(
-      { message: 'Invalid verification code' },
+      { 
+        title: AUTH_CONSTANTS.INVALID_CODE,
+        detail: AUTH_CONSTANTS.INVALID_CODE,
+        status: 400
+      },
       { status: 400 }
     );
   }),
 
-  http.post(`${API_BASE_URL}/auth/register`, async ({ request }) => {
-    const { name, teamName } = await request.json() as { name: string; teamName: string };
+  http.post('http://localhost:5050/api/v1/auth/complete-registration', async ({ request }) => {
+    const { displayName, teamName } = await request.json() as { displayName: string; teamName: string };
     
     return HttpResponse.json({
       token: 'mock-jwt-token',
       user: {
         id: '1',
         email: 'test@example.com',
-        name,
-        isEmailVerified: true,
+        displayName,
       },
       team: {
         id: '1',
         name: teamName,
-        role: 'Owner',
+        role: AUTH_CONSTANTS.ADMIN_ROLE,
       },
-      teams: [{
-        id: '1',
-        name: teamName,
-        role: 'Owner',
-      }],
     });
   }),
 
   // Todo lists endpoints
-  http.get(`${API_BASE_URL}/lists`, () => {
+  http.get('http://localhost:5050/api/v1/lists', () => {
     return HttpResponse.json({
       lists: [
         {
@@ -109,14 +102,14 @@ export const handlers = [
   }),
 
   // Team endpoints
-  http.get(`${API_BASE_URL}/team/members`, () => {
+  http.get('http://localhost:5050/api/v1/team/members', () => {
     return HttpResponse.json({
       members: [
         {
           id: '1',
           name: 'Test User',
           email: 'test@example.com',
-          role: 'Owner',
+          role: AUTH_CONSTANTS.ADMIN_ROLE,
           joinedAt: new Date().toISOString(),
         },
       ],

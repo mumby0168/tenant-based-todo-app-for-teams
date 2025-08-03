@@ -3,18 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../apis/auth.api';
 import { useAuthStore } from '../../stores/auth-store';
 import { useUiStore } from '../../stores/ui-store';
-import type { RequestCodeRequest, VerifyCodeRequest, RegisterRequest } from '../../apis/auth.api';
+import { AUTH_CONSTANTS } from '../../constants/auth.constants';
+import type {
+  RequestCodeRequest,
+  VerifyCodeRequest,
+  CompleteRegistrationRequest,
+} from '../../types/auth.types';
 
 export function useRequestCode() {
   const navigate = useNavigate();
   const addNotification = useUiStore((state) => state.addNotification);
+  const setPendingEmail = useAuthStore((state) => state.setPendingEmail);
 
   return useMutation({
     mutationFn: (data: RequestCodeRequest) => authApi.requestCode(data),
-    onSuccess: (_, variables) => {
-      // Store email in session storage for the verify step
-      sessionStorage.setItem('auth_email', variables.email);
-      navigate('/login/verify');
+    onSuccess: (response, variables) => {
+      // Store email in auth store for the verify step
+      setPendingEmail(variables.email, false); // We don't know if new user yet
+      addNotification(response.message, 'success');
+      navigate('/verify');
     },
     onError: (error: Error) => {
       addNotification(error.message, 'error');
@@ -24,7 +31,7 @@ export function useRequestCode() {
 
 export function useVerifyCode() {
   const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const { setAuth, setPendingEmail, setVerificationCode } = useAuthStore();
   const addNotification = useUiStore((state) => state.addNotification);
 
   return useMutation({
@@ -32,18 +39,21 @@ export function useVerifyCode() {
     onSuccess: (response, variables) => {
       if (response.isNewUser) {
         // New user needs to complete registration
-        sessionStorage.setItem('auth_email', variables.email);
-        navigate('/signup/create-account');
-      } else if (response.user && response.team && response.teams && response.token) {
+        setPendingEmail(variables.email, true);
+        setVerificationCode(variables.code); // Store the code for registration
+        navigate('/register');
+      } else if (response.user && response.token) {
         // Existing user - log them in
-        setAuth(response.user, response.team, response.teams, response.token);
-        sessionStorage.removeItem('auth_email');
-        
-        if (response.teams.length > 1) {
-          navigate('/login/select-team');
-        } else {
-          navigate('/');
-        }
+        // For now, we'll need to parse JWT to get team info
+        // In a real app, the backend should return full team info
+        const mockTeam = {
+          id: '1',
+          name: 'Default Team',
+          role: AUTH_CONSTANTS.ADMIN_ROLE,
+        };
+        setAuth(response.user, mockTeam, response.token);
+        addNotification('Welcome back!', 'success');
+        navigate('/');
       }
     },
     onError: (error: Error) => {
@@ -52,20 +62,23 @@ export function useVerifyCode() {
   });
 }
 
-export function useRegister() {
+export function useCompleteRegistration() {
   const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const { setAuth, setRegistrationInProgress } = useAuthStore();
   const addNotification = useUiStore((state) => state.addNotification);
 
   return useMutation({
-    mutationFn: (data: RegisterRequest) => authApi.register(data),
+    mutationFn: (data: CompleteRegistrationRequest) => {
+      setRegistrationInProgress(true);
+      return authApi.completeRegistration(data);
+    },
     onSuccess: (response) => {
-      setAuth(response.user, response.team, response.teams, response.token);
-      sessionStorage.removeItem('auth_email');
+      setAuth(response.user, response.team, response.token);
       addNotification('Account created successfully!', 'success');
       navigate('/');
     },
     onError: (error: Error) => {
+      setRegistrationInProgress(false);
       addNotification(error.message, 'error');
     },
   });

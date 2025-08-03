@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Box,
   Button,
@@ -8,41 +8,30 @@ import {
   Typography,
   Link,
   LinearProgress,
-  Checkbox,
-  FormControlLabel,
+  Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { verificationSchema, type VerificationFormData } from '../schemas/auth.schema';
+import { useAuthStore } from '../stores/auth-store';
 import { useVerifyCode, useRequestCode } from '../hooks/mutations/useAuth';
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
 
 export function VerifyCode() {
   const navigate = useNavigate();
+  const pendingEmail = useAuthStore((state) => state.pendingEmail);
   const verifyCode = useVerifyCode();
   const requestCode = useRequestCode();
-  
-  const [email, setEmail] = useState('');
-  const [resendDisabled, setResendDisabled] = useState(true);
-  const [resendTimer, setResendTimer] = useState(60);
-  const [rememberMe, setRememberMe] = useState(false);
 
-  const form = useForm<VerificationFormData>({
-    resolver: yupResolver(verificationSchema),
-    mode: 'onChange',
-    defaultValues: {
-      code: '',
-    },
-  });
+  const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [resendDisabled, setResendDisabled] = useState(true);
+  const [resendTimer, setResendTimer] = useState(AUTH_CONSTANTS.RESEND_COOLDOWN_SECONDS);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    // Get email from session storage
-    const storedEmail = sessionStorage.getItem('auth_email');
-    if (!storedEmail) {
+    // Redirect if no pending email
+    if (!pendingEmail && !code.some(digit => digit)) {
       navigate('/login');
       return;
     }
-    setEmail(storedEmail);
 
     // Start resend timer
     const timer = setInterval(() => {
@@ -56,20 +45,65 @@ export function VerifyCode() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [navigate]);
+  }, [pendingEmail, navigate]);
 
-  const onSubmit = (data: VerificationFormData) => {
-    verifyCode.mutate({
-      email,
-      code: data.code,
-    });
+  const handleCodeChange = (index: number, value: string) => {
+    // Only allow digits
+    if (value && !/^\d$/.test(value)) return;
+
+    const newCode = [...code];
+    newCode[index] = value;
+    setCode(newCode);
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-submit when complete
+    if (value && index === 5 && newCode.every(digit => digit)) {
+      handleSubmit(newCode.join(''));
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !code[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').slice(0, 6);
+    if (/^\d+$/.test(pastedData)) {
+      const newCode = pastedData.split('').concat(Array(6).fill('')).slice(0, 6);
+      setCode(newCode);
+      if (pastedData.length === 6) {
+        handleSubmit(pastedData);
+      }
+    }
+  };
+
+  const handleSubmit = (codeString?: string) => {
+    const finalCode = codeString || code.join('');
+    if (finalCode.length === 6 && pendingEmail) {
+      verifyCode.mutate({
+        email: pendingEmail,
+        code: finalCode,
+      });
+    }
   };
 
   const handleResend = () => {
-    setResendDisabled(true);
-    setResendTimer(60);
-    requestCode.mutate({ email });
+    if (pendingEmail) {
+      setResendDisabled(true);
+      setResendTimer(AUTH_CONSTANTS.RESEND_COOLDOWN_SECONDS);
+      requestCode.mutate({ email: pendingEmail });
+      setCode(['', '', '', '', '', '']); // Clear the code
+    }
   };
+
+  if (!pendingEmail) return null;
 
   return (
     <Container component="main" maxWidth="xs">
@@ -82,103 +116,107 @@ export function VerifyCode() {
         }}
       >
         <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
+          <Typography component="h1" variant="h5" align="center" gutterBottom>
             Verify Your Email
           </Typography>
-          
-          <Typography variant="body2" align="center" gutterBottom>
+
+          <Typography variant="body2" color="text.secondary" align="center" gutterBottom>
             We sent a code to
           </Typography>
-          
-          <Typography variant="body1" align="center" sx={{ fontWeight: 'bold', mb: 3 }}>
-            {email}
+
+          <Typography variant="body1" align="center" sx={{ fontWeight: 'medium', mb: 3 }}>
+            {pendingEmail}
           </Typography>
 
-          <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
-            <Controller
-              name="code"
-              control={form.control}
-              render={({ field, fieldState }) => (
+          <Box>
+            {/* OTP Input Fields */}
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 3 }}>
+              {code.map((digit, index) => (
                 <TextField
-                  {...field}
-                  fullWidth
-                  label="Verification Code"
-                  placeholder="000000"
-                  autoComplete="one-time-code"
-                  autoFocus
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message || 'Enter the 6-digit code'}
-                  disabled={verifyCode.isPending}
+                  key={index}
+                  inputRef={(el) => (inputRefs.current[index] = el)}
+                  value={digit}
+                  onChange={(e) => handleCodeChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  onPaste={index === 0 ? handlePaste : undefined}
                   inputProps={{
-                    maxLength: 6,
-                    pattern: '[0-9]*',
+                    maxLength: 1,
+                    style: {
+                      textAlign: 'center',
+                      fontSize: '24px',
+                      fontWeight: '500',
+                    },
+                    'aria-label': `Digit ${index + 1}`,
                     inputMode: 'numeric',
+                    pattern: '[0-9]*',
                   }}
-                />
-              )}
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  sx={{
+                    width: 48,
+                    '& .MuiOutlinedInput-root': {
+                      height: 56,
+                    },
+                  }}
                   disabled={verifyCode.isPending}
+                  autoFocus={index === 0}
                 />
-              }
-              label="Remember me"
-              sx={{ mt: 1 }}
-            />
+              ))}
+            </Box>
 
             <Button
-              type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={!form.formState.isValid || verifyCode.isPending}
+              onClick={() => handleSubmit()}
+              disabled={code.join('').length !== 6 || verifyCode.isPending}
+              sx={{ mb: 2 }}
             >
               {verifyCode.isPending ? 'Verifying...' : 'Verify Code'}
             </Button>
 
+            {(verifyCode.isError || requestCode.isError) && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {verifyCode.error?.message || requestCode.error?.message}
+              </Alert>
+            )}
+
+            {/* Timer Progress Bar */}
             <Box sx={{ mb: 2 }}>
               <LinearProgress
                 variant="determinate"
-                value={(15 * 60 - (60 - resendTimer)) / (15 * 60) * 100}
-                sx={{ height: 6, borderRadius: 3 }}
+                value={100 - (resendTimer / AUTH_CONSTANTS.RESEND_COOLDOWN_SECONDS) * 100}
+                sx={{ height: 4, borderRadius: 2 }}
               />
-              <Typography variant="caption" color="text.secondary">
-                Code expires in 15 minutes
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                Code expires in {AUTH_CONSTANTS.CODE_EXPIRATION_MINUTES} minutes
               </Typography>
             </Box>
 
-            <Box sx={{ textAlign: 'center' }}>
+            {/* Resend Code Link */}
+            <Typography variant="body2" color="text.secondary" align="center">
+              Didn't receive the code?{' '}
               <Link
                 component="button"
                 variant="body2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleResend();
-                }}
+                onClick={handleResend}
                 disabled={resendDisabled || requestCode.isPending}
-                sx={{ 
+                sx={{
                   textDecoration: resendDisabled ? 'none' : 'underline',
                   color: resendDisabled ? 'text.disabled' : 'primary.main',
                   cursor: resendDisabled ? 'default' : 'pointer',
                 }}
               >
-                {resendDisabled 
-                  ? `Resend code in ${resendTimer}s` 
+                {resendDisabled
+                  ? `Resend in ${resendTimer}s`
                   : 'Resend code'}
               </Link>
-            </Box>
+            </Typography>
 
+            {/* Back to Login Link */}
             <Box sx={{ mt: 2, textAlign: 'center' }}>
               <Link
                 component="button"
                 variant="body2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  sessionStorage.removeItem('auth_email');
+                onClick={() => {
+                  useAuthStore.getState().clearPendingEmail();
                   navigate('/login');
                 }}
               >
