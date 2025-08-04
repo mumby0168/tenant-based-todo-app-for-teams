@@ -1,5 +1,6 @@
 {
   "features": {
     "execCommandEnabled": "true"
-  }
+  },
+  "appHostPath": "../TodoApp.AppHost.csproj"
 }

@@ -13,20 +13,36 @@ using TodoApp.Api.Features.HealthCheck;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
-builder.Services.AddHealthChecks();
+// Add Aspire service defaults - provides telemetry, health checks, service discovery
+builder.AddServiceDefaults();
+
+// Add PostgreSQL with Aspire integration (connection string automatically injected)
+builder.AddNpgsqlDbContext<TodoAppDbContext>("todoapp-db", configureDbContextOptions: options =>
+{
+    // Move snake case naming from OnConfiguring to here (required for DbContext pooling)
+    options.UseSnakeCaseNamingConvention();
+});
 
 // Add FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<RequestCodeRequestValidator>();
 
-// Add Entity Framework Core with PostgreSQL
-builder.Services.AddDbContext<TodoAppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Add Authentication & Authorization
-builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
+// Add Authentication & Authorization  
+builder.Services.Configure<EmailOptions>(options =>
+{
+    // Configure email options with Aspire service discovery
+    builder.Configuration.GetSection(EmailOptions.SectionName).Bind(options);
+    
+    // Override with Aspire-provided MailDev SMTP endpoint if available
+    var maildevSmtp = builder.Configuration["services:maildev:smtp:0"];
+    if (!string.IsNullOrEmpty(maildevSmtp))
+    {
+        var uri = new Uri(maildevSmtp);
+        options.SmtpHost = uri.Host;
+        options.SmtpPort = uri.Port;
+    }
+});
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -80,6 +96,13 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// Apply database migrations automatically on startup
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<TodoAppDbContext>();
+    context.Database.Migrate();
+}
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -95,6 +118,9 @@ app.UseCors("AllowWeb");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Map Aspire service defaults endpoints (health checks, etc.)
+app.MapDefaultEndpoints();
 
 app.MapHealthCheckEndpoints();
 app.MapAuthEndpoints();
