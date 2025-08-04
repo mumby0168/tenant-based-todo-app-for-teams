@@ -8,6 +8,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
+    env: {
+      VITE_ENABLE_MSW: 'true' // Enable MSW for integration tests
+    },
     exclude: [
       '**/node_modules/**',
       '**/e2e/**',

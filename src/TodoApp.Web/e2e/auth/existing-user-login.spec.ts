@@ -14,12 +14,6 @@ test.describe('Existing User Login', () => {
   let existingUser: TestUser;
 
   test.beforeEach(async ({ page, context }) => {
-    // Set a flag to disable MSW before any scripts run
-    await context.addInitScript(() => {
-      // This runs before any page scripts
-      (window as unknown as { __PLAYWRIGHT_TEST__: boolean }).__PLAYWRIGHT_TEST__ = true;
-    });
-
     loginPage = new LoginPage(page);
     verifyPage = new VerifyCodePage(page);
     dashboardPage = new DashboardPage(page);
