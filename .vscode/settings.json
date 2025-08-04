@@ -4,19 +4,7 @@
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit",
     "source.fixAll": "explicit"
-  },
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
-  "eslint.workingDirectories": [
-    "src/TodoApp.Web"
-  ],
-  "eslint.enable": true,
-  "eslint.run": "onSave",
-  "typescript.preferences.organizeImportsIgnoreCase": "auto",
+  },  
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -32,11 +20,5 @@
   },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[csharp]": {
-    "editor.defaultFormatter": "ms-dotnettools.csharp"
-  },
-  "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
-  "omnisharp.enableEditorConfigSupport": true,
-  "omnisharp.enableRoslynAnalyzers": true
+  } 
 }

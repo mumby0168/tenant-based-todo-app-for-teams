@@ -7,7 +7,7 @@ using TodoApp.Api.Tests.Features.Auth.Builders;
 
 namespace TodoApp.Api.Tests.Features.Auth;
 
-public class AuthenticationEndpointsTests(IntegrationTestFactory factory) : IntegrationTestBase(factory), IntegrationTestBase
+public class AuthenticationEndpointsTests(IntegrationTestFactory factory) : IntegrationTestBase(factory)
 {
     private readonly AuthTestDataBuilder _testData = new();
 
