@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api/v1';
 
@@ -13,7 +14,7 @@ export const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem(AUTH_CONSTANTS.AUTH_TOKEN_KEY);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,7 +31,7 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Clear token and redirect to login
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem(AUTH_CONSTANTS.AUTH_TOKEN_KEY);
       window.location.href = '/login';
     }
     return Promise.reject(error);

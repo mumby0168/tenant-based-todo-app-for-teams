@@ -5,7 +5,7 @@ import { AppSidebar } from './AppSidebar';
 import { useAuthStore } from '../../stores/auth-store';
 
 export function AppLayout() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
 
   if (!isAuthenticated) {
     return <Outlet />;

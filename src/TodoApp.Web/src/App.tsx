@@ -19,9 +19,11 @@ function App() {
         <CssBaseline />
         <BrowserRouter>
           <Routes>
+            {/* Public authentication routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/login/verify" element={<VerifyCode />} />
-            <Route path="/signup/create-account" element={<CreateAccount />} />
+            <Route path="/signup" element={<Login />} />
+            <Route path="/verify" element={<VerifyCode />} />
+            <Route path="/register" element={<CreateAccount />} />
             
             <Route element={<AppLayout />}>
               <Route

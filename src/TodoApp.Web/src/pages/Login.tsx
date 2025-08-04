@@ -5,16 +5,16 @@ import {
   Paper,
   TextField,
   Typography,
+  Alert,
   Link,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { emailSchema, type EmailFormData } from '../schemas/auth.schema';
-import { useRequestCode } from '../hooks/mutations/useAuth';
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { useRequestCode } from '../hooks/mutations/useRequestCode';
 
 export function Login() {
-  const navigate = useNavigate();
   const requestCode = useRequestCode();
 
   const form = useForm<EmailFormData>({
@@ -44,8 +44,8 @@ export function Login() {
             TodoApp V1
           </Typography>
 
-          <Typography component="h2" variant="h6" align="center" gutterBottom>
-            Sign in to your account
+          <Typography variant="body1" color="text.secondary" align="center" gutterBottom>
+            Sign in to continue to TodoApp
           </Typography>
 
           <Box component="form" onSubmit={form.handleSubmit(onSubmit)} sx={{ mt: 3 }}>
@@ -73,24 +73,30 @@ export function Login() {
               sx={{ mt: 3, mb: 2 }}
               disabled={!form.formState.isValid || requestCode.isPending}
             >
-              {requestCode.isPending ? 'Sending...' : 'Send Verification Code'}
+              {requestCode.isPending ? 'Sending...' : 'Continue'}
             </Button>
 
-            <Typography variant="body2" color="text.secondary" align="center">
-              We'll send you a verification code to sign in
+            {requestCode.isError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {requestCode.error?.message || 'Failed to send verification code'}
+              </Alert>
+            )}
+
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
+              We'll send you a {AUTH_CONSTANTS.VERIFICATION_CODE_LENGTH}-digit code to sign in
             </Typography>
 
-            <Box sx={{ mt: 2, textAlign: 'center' }}>
-              <Link
-                component="button"
-                variant="body2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate('/signup');
-                }}
-              >
-                New user? Sign up
-              </Link>
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                New user?{' '}
+                <Link
+                  href="/signup"
+                  underline="hover"
+                  sx={{ cursor: 'pointer' }}
+                >
+                  Sign up
+                </Link>
+              </Typography>
             </Box>
           </Box>
         </Paper>

@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -6,41 +5,55 @@ import {
   Paper,
   TextField,
   Typography,
+  Alert,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { registrationSchema, type RegistrationFormData } from '../schemas/auth.schema';
-import { useRegister } from '../hooks/mutations/useAuth';
+import * as yup from 'yup';
+import { useAuthStore } from '../stores/auth-store';
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { useCompleteRegistration } from '../hooks/mutations/useCompleteRegistration';
+import { useNavigateWhenUnauthenticated } from '../hooks/navigation/useNavigateWhenUnauthenticated';
+
+// Validation schema matching backend requirements
+const createAccountSchema = yup.object({
+  displayName: yup
+    .string()
+    .required('Display name is required')
+    .min(AUTH_CONSTANTS.NAME_MIN_LENGTH, `Must be at least ${AUTH_CONSTANTS.NAME_MIN_LENGTH} characters`)
+    .max(AUTH_CONSTANTS.NAME_MAX_LENGTH, `Must not exceed ${AUTH_CONSTANTS.NAME_MAX_LENGTH} characters`),
+  teamName: yup
+    .string()
+    .required('Team name is required')
+    .min(3, 'Team name must be at least 3 characters')
+    .max(50, 'Team name must not exceed 50 characters'),
+});
+
+type CreateAccountFormData = yup.InferType<typeof createAccountSchema>;
 
 export function CreateAccount() {
-  const navigate = useNavigate();
-  const register = useRegister();
-  const [email, setEmail] = useState('');
+  const { pendingEmail, pendingCode } = useAuthStore();
+  const completeRegistration = useCompleteRegistration();
 
-  const form = useForm<RegistrationFormData>({
-    resolver: yupResolver(registrationSchema),
+  const form = useForm<CreateAccountFormData>({
+    resolver: yupResolver(createAccountSchema),
     mode: 'onChange',
     defaultValues: {
-      name: '',
+      displayName: '',
       teamName: '',
     },
   });
 
-  useEffect(() => {
-    // Get email from session storage
-    const storedEmail = sessionStorage.getItem('auth_email');
-    if (!storedEmail) {
-      navigate('/login');
-      return;
-    }
-    setEmail(storedEmail);
-  }, [navigate]);
+  useNavigateWhenUnauthenticated();
 
-  const onSubmit = (data: RegistrationFormData) => {
-    register.mutate({
-      email,
-      ...data,
+  const onSubmit = (data: CreateAccountFormData) => {
+    if (!pendingEmail || !pendingCode) return;
+
+    completeRegistration.mutate({
+      email: pendingEmail,
+      code: pendingCode,
+      displayName: data.displayName,
+      teamName: data.teamName,
     });
   };
 
@@ -55,28 +68,29 @@ export function CreateAccount() {
         }}
       >
         <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
+          <Typography component="h1" variant="h5" align="center" gutterBottom>
             Create Your Account
           </Typography>
-          
-          <Typography variant="body2" align="center" color="text.secondary" gutterBottom>
-            Let's set up your profile and first team
+
+          <Typography variant="body2" color="text.secondary" align="center" gutterBottom sx={{ mb: 3 }}>
+            Let's set up your account and first team
           </Typography>
 
           <Box component="form" onSubmit={form.handleSubmit(onSubmit)} sx={{ mt: 3 }}>
             <Controller
-              name="name"
+              name="displayName"
               control={form.control}
               render={({ field, fieldState }) => (
                 <TextField
                   {...field}
                   fullWidth
                   label="Display Name"
+                  placeholder="John Doe"
                   autoComplete="name"
                   autoFocus
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message || 'This is how you\'ll appear to your team'}
-                  disabled={register.isPending}
+                  disabled={completeRegistration.isPending}
                   sx={{ mb: 2 }}
                 />
               )}
@@ -90,10 +104,10 @@ export function CreateAccount() {
                   {...field}
                   fullWidth
                   label="Team Name"
-                  autoComplete="organization"
+                  placeholder="My Team"
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message || 'You can invite others to this team later'}
-                  disabled={register.isPending}
+                  disabled={completeRegistration.isPending}
                 />
               )}
             />
@@ -103,13 +117,19 @@ export function CreateAccount() {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
-              disabled={!form.formState.isValid || register.isPending}
+              disabled={!form.formState.isValid || completeRegistration.isPending}
             >
-              {register.isPending ? 'Creating Account...' : 'Create Account'}
+              {completeRegistration.isPending ? 'Creating Account...' : 'Create Account'}
             </Button>
 
-            <Typography variant="caption" color="text.secondary" align="center" display="block">
-              By creating an account, you agree to our Terms of Service and Privacy Policy
+            {completeRegistration.isError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {completeRegistration.error?.message || 'Failed to create account'}
+              </Alert>
+            )}
+
+            <Typography variant="body2" color="text.secondary" align="center">
+              By creating an account, you'll become the admin of your team
             </Typography>
           </Box>
         </Paper>
