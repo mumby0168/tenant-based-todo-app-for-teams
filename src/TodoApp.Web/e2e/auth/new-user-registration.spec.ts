@@ -16,7 +16,7 @@ test.describe('New User Registration', () => {
     // Set a flag to disable MSW before any scripts run
     await context.addInitScript(() => {
       // This runs before any page scripts
-      (window as any).__PLAYWRIGHT_TEST__ = true;
+      (window as unknown as { __PLAYWRIGHT_TEST__: boolean }).__PLAYWRIGHT_TEST__ = true;
     });
 
     loginPage = new LoginPage(page);

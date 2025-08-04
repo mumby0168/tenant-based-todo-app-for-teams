@@ -54,7 +54,7 @@ export interface ProblemDetails {
   status?: number;
   detail?: string;
   instance?: string;
-  extensions?: Record<string, any>;
+  extensions?: Record<string, unknown>;
 }
 
 export interface ValidationProblemDetails extends ProblemDetails {

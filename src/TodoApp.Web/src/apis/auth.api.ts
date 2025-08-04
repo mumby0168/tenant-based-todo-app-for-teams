@@ -11,12 +11,18 @@ import type {
 } from '../types/auth.types';
 
 // Helper to extract error message from backend response
-function getErrorMessage(error: any, defaultMessage: string): string {
-  if (error.response?.data) {
-    const problemDetails = error.response.data as ProblemDetails;
-    return problemDetails.detail || problemDetails.title || defaultMessage;
+function getErrorMessage(error: unknown, defaultMessage: string): string {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as { response?: { data?: ProblemDetails } };
+    if (axiosError.response?.data) {
+      const problemDetails = axiosError.response.data;
+      return problemDetails.detail || problemDetails.title || defaultMessage;
+    }
   }
-  return error.message || defaultMessage;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return (error as { message: string }).message || defaultMessage;
+  }
+  return defaultMessage;
 }
 
 // API functions
@@ -28,7 +34,7 @@ export const authApi = {
         data
       );
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.response?.status === 429) {
         throw new Error(AUTH_CONSTANTS.TOO_MANY_REQUESTS);
       }
@@ -43,7 +49,7 @@ export const authApi = {
         data
       );
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new Error(getErrorMessage(error, AUTH_CONSTANTS.INVALID_CODE));
     }
   },
@@ -55,7 +61,7 @@ export const authApi = {
         data
       );
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.response?.status === 400) {
         const problemDetails = error.response.data as ProblemDetails;
         if (problemDetails.title === 'User exists') {

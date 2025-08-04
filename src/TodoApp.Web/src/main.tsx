@@ -9,7 +9,7 @@ async function enableMocking() {
   }
   
   // Disable MSW when running e2e tests
-  if ((window as any).__PLAYWRIGHT_TEST__) {
+  if ((window as unknown as { __PLAYWRIGHT_TEST__?: boolean }).__PLAYWRIGHT_TEST__) {
     console.log('MSW disabled for Playwright e2e tests');
     return
   }

@@ -210,7 +210,6 @@ describe('VerifyCode', () => {
   });
 
   it('handles resend code functionality', async () => {
-    const user = userEvent.setup();
     renderWithProviders(<VerifyCode />);
 
     // Resend button should be disabled initially
