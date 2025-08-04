@@ -1,11 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { TodoListsPage } from '../pages/todo-lists.page';
-import { TestUser, UserHelper } from '../support/user-helper';
+import { UserHelper } from '../support/user-helper';
 
 test.describe('Todo Lists - Empty State', () => {
   let todoListsPage: TodoListsPage;
-  let userHelper: UserHelper;
-  let testUser: TestUser;
+  let userHelper: UserHelper;  
 
   test.beforeEach(async ({ page }) => {
     todoListsPage = new TodoListsPage(page);
@@ -14,7 +13,7 @@ test.describe('Todo Lists - Empty State', () => {
 
   test('should create user, navigate to lists page, and verify empty state', async ({ page }) => {
     // Step 1: Create and sign in a new user
-    testUser = await userHelper.createExistingUser();
+    await userHelper.createExistingUser();
 
     // Step 2: Verify we're on the dashboard after registration
     await expect(page).toHaveURL('/');
