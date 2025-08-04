@@ -11,65 +11,54 @@ test.describe('New User Registration', () => {
   let createAccountPage: CreateAccountPage;
   let dashboardPage: DashboardPage;
   let maildevHelper: MailDevHelper;
-  
+
   test.beforeEach(async ({ page, context }) => {
     // Set a flag to disable MSW before any scripts run
     await context.addInitScript(() => {
       // This runs before any page scripts
       (window as any).__PLAYWRIGHT_TEST__ = true;
     });
-    
+
     loginPage = new LoginPage(page);
     verifyPage = new VerifyCodePage(page);
     createAccountPage = new CreateAccountPage(page);
     dashboardPage = new DashboardPage(page);
     maildevHelper = new MailDevHelper(page);
-    
-    // Clear emails for clean test state
-    await maildevHelper.clearAllEmails();
   });
 
   test('should complete full registration flow', async ({ page }) => {
     const testEmail = `test-${Date.now()}@example.com`;
     const displayName = 'Test User';
     const teamName = `Team ${Date.now()}`;
-    
-    // Check console for MSW status
-    page.on('console', msg => {
-      if (msg.text().includes('MSW')) {
-        console.log('Console:', msg.text());
-      }
-    });
-    
+
     // Step 1: Submit email on login page
     await loginPage.goto();
     await loginPage.submitEmail(testEmail);
-    
+
     // Step 2: Verify navigation to verify code page
     await expect(page).toHaveURL(/\/verify/);
     await expect(await verifyPage.isDisplayingEmail(testEmail)).toBeTruthy();
-    
+
     // Step 3: Retrieve verification code from MailDev
     // Wait a moment for email to arrive
     await page.waitForTimeout(2000);
     const code = await maildevHelper.getLatestVerificationCode(testEmail);
     expect(code).toMatch(/^\d{6}$/);
-    
+
     // Step 4: Enter verification code
     await verifyPage.enterCode(code);
-    
+
     // Step 5: Verify navigation to create account page
     await expect(page).toHaveURL(/\/register/);
-    
+
     // Step 6: Complete registration
     await createAccountPage.fillForm({ displayName, teamName });
     await createAccountPage.submit();
-    
+
     // Step 7: Verify successful login and navigation to dashboard
     // Wait for navigation and check where we ended up
     await page.waitForLoadState('networkidle');
-    console.log('Current URL after registration:', page.url());
-    
+
     await expect(page).toHaveURL('/');
     await expect(await dashboardPage.isLoggedIn()).toBeTruthy();
   });

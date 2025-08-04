@@ -31,21 +31,4 @@ export class MailDevHelper {
     await mailPage.close();
     return code?.trim() || '';
   }
-
-  async clearAllEmails(): Promise<void> {
-    const mailPage = await this.page.context().newPage();
-    await mailPage.goto(this.maildevUrl);
-
-    // Wait a bit for the page to load
-    await mailPage.waitForTimeout(1000);
-
-    const deleteButton = await mailPage.locator('button:has-text("Delete All")');
-    if (await deleteButton.isVisible()) {
-      await deleteButton.click();
-      // Wait for deletion to complete
-      await mailPage.waitForTimeout(500);
-    }
-
-    await mailPage.close();
-  }
 }
