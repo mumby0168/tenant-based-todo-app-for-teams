@@ -128,11 +128,11 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
                 // Configure test authentication with provided values
                 services.Configure<TestAuthenticationSchemeOptions>(options =>
                 {
-                    options.UserId = userId ?? Guid.NewGuid();
-                    options.TeamId = teamId ?? Guid.NewGuid();
-                    options.Role = role ?? "Member";
-                    options.Email = email ?? "test@example.com";
-                    options.Name = name ?? "Test User";
+                    if (userId.HasValue) options.UserId = userId.Value;
+                    if (teamId.HasValue) options.TeamId = teamId.Value;
+                    if (role != null) options.Role = role;
+                    if (email != null) options.Email = email;
+                    if (name != null) options.Name = name;
                 });
             });
         }).CreateClient();
