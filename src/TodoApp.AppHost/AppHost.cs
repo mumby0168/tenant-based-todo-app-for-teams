@@ -19,4 +19,13 @@ var api = builder.AddProject<Projects.TodoApp_Api>("api")
     .WaitFor(postgres)  // Wait for database to be ready
     .WithExternalHttpEndpoints();  // Allow external access
 
+// Step 4: Add React frontend with Vite hot reload (replaces Docker Compose web-dev service)
+var frontend = builder.AddNpmApp("frontend", "../TodoApp.Web", "dev")  // Use "dev" script instead of default "start"
+    .WithReference(api)  // Provides service discovery: services__api__http__0
+    .WithHttpEndpoint(env: "PORT")  // Dynamic port via PORT environment variable
+    .WithEnvironment("BROWSER", "none")  // Don't auto-open browser
+    .WithExternalHttpEndpoints()  // Allow external access
+    .WaitFor(api)  // Wait for API to be ready
+    .PublishAsDockerFile();  // For production deployment
+
 builder.Build().Run();
