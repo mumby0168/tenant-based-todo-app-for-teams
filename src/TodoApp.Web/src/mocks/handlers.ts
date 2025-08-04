@@ -75,16 +75,16 @@ export const handlers = [
     });
   }),
 
-  // Todo lists endpoints
+  // Todo lists endpoints - Match backend DTO structure
   http.get('http://localhost:5050/api/v1/lists', () => {
     return HttpResponse.json({
-      lists: [
+      todoLists: [ // Changed from 'lists' to 'todoLists' to match GetTodoListsResponse
         {
           id: '1',
           name: 'Personal Tasks',
           description: 'My personal todo list',
+          color: '#1976d2',
           todoCount: 5,
-          completedCount: 2,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -92,8 +92,8 @@ export const handlers = [
           id: '2',
           name: 'Work Projects',
           description: 'Current work items',
+          color: '#d32f2f',
           todoCount: 10,
-          completedCount: 3,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },

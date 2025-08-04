@@ -13,6 +13,7 @@ public class TodoAppDbContext : DbContext
     public DbSet<Team> Teams { get; set; }
     public DbSet<TeamMembership> TeamMemberships { get; set; }
     public DbSet<Todo> Todos { get; set; }
+    public DbSet<TodoList> TodoLists { get; set; }
     public DbSet<VerificationToken> VerificationTokens { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -91,6 +92,27 @@ public class TodoAppDbContext : DbContext
             entity.HasIndex(t => t.DueDate);
         });
         
+        // TodoList entity configuration
+        modelBuilder.Entity<TodoList>(entity =>
+        {
+            entity.HasKey(tl => tl.Id);
+            entity.Property(tl => tl.Name).IsRequired().HasMaxLength(256);
+            entity.Property(tl => tl.Description).HasMaxLength(1000);
+            entity.Property(tl => tl.Color).HasMaxLength(7); // Hex color code
+            
+            entity.HasOne(tl => tl.Team)
+                .WithMany(t => t.TodoLists)
+                .HasForeignKey(tl => tl.TeamId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.Property(tl => tl.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(tl => tl.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(tl => tl.IsDeleted).HasDefaultValue(false);
+            
+            entity.HasIndex(tl => tl.TeamId);
+            entity.HasIndex(tl => tl.IsDeleted);
+        });
+        
         // VerificationToken entity configuration
         modelBuilder.Entity<VerificationToken>(entity =>
         {
@@ -132,7 +154,7 @@ public class TodoAppDbContext : DbContext
     private void UpdateTimestamps()
     {
         var entries = ChangeTracker.Entries()
-            .Where(e => e.Entity is User or Team or Todo && (e.State == EntityState.Modified));
+            .Where(e => e.Entity is User or Team or Todo or TodoList && (e.State == EntityState.Modified));
             
         foreach (var entry in entries)
         {
@@ -146,6 +168,9 @@ public class TodoAppDbContext : DbContext
                     break;
                 case Todo todo:
                     todo.UpdatedAt = DateTimeOffset.UtcNow;
+                    break;
+                case TodoList todoList:
+                    todoList.UpdatedAt = DateTimeOffset.UtcNow;
                     break;
             }
         }
