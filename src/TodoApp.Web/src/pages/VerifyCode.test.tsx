@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor, renderWithProviders, userEvent, TEST_EMAIL, TEST_CODE, EXISTING_USER_EMAIL, NEW_USER_EMAIL } from '../test/test-utils';
+import { screen, waitFor, renderWithProviders, userEvent, act, TEST_EMAIL, TEST_CODE, EXISTING_USER_EMAIL, NEW_USER_EMAIL } from '../test/test-utils';
 import { VerifyCode } from './VerifyCode';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
@@ -21,17 +21,23 @@ describe('VerifyCode', () => {
   beforeEach(() => {
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
     // Set up auth store with pending email
-    useAuthStore.getState().setCodeRequested(TEST_EMAIL);
+    act(() => {
+      useAuthStore.getState().setCodeRequested(TEST_EMAIL);
+    });
   });
 
   afterEach(() => {
     vi.clearAllMocks();
     // Clean up auth store after each test
-    useAuthStore.getState().reset()
+    act(() => {
+      useAuthStore.getState().reset();
+    });
   });
 
   it('redirects to login if unauthenticated', async () => {
-    useAuthStore.getState().reset();
+    act(() => {
+      useAuthStore.getState().reset();
+    });
 
     renderWithProviders(<VerifyCode />);
 
@@ -81,8 +87,10 @@ describe('VerifyCode', () => {
     const inputs = screen.getAllByRole('textbox');
 
     // Focus on second input and press backspace
-    inputs[1].focus();
-    await user.keyboard('{Backspace}');
+    await act(async () => {
+      inputs[1].focus();
+      await user.keyboard('{Backspace}');
+    });
 
     expect(inputs[0]).toHaveFocus();
   });
@@ -124,7 +132,9 @@ describe('VerifyCode', () => {
     const user = userEvent.setup();
 
     // Clear the default state first
-    useAuthStore.getState().setCodeRequested(EXISTING_USER_EMAIL);
+    act(() => {
+      useAuthStore.getState().setCodeRequested(EXISTING_USER_EMAIL);
+    });
 
     renderWithProviders(<VerifyCode />);
 
@@ -157,7 +167,9 @@ describe('VerifyCode', () => {
     const user = userEvent.setup();
 
     // Set up as new user
-    useAuthStore.getState().setCodeRequested(NEW_USER_EMAIL);
+    act(() => {
+      useAuthStore.getState().setCodeRequested(NEW_USER_EMAIL);
+    });
 
     renderWithProviders(<VerifyCode />);
 

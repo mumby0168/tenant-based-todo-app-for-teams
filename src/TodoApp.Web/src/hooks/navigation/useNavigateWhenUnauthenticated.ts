@@ -8,8 +8,7 @@ export function useNavigateWhenUnauthenticated() {
     const status = useAuthStore(state => state.status);
 
     useEffect(() => {
-        if (status === 'unauthenticated') {
-            console.warn('User is unauthenticated, redirecting to login');
+        if (status === 'unauthenticated') {            
             navigate('/login');
         }
     }, [status, navigate]);

@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import { render, RenderOptions, act } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@mui/material';
@@ -65,6 +65,16 @@ export function renderWithProviders(
 // eslint-disable-next-line react-refresh/only-export-components
 export * from '@testing-library/react';
 export { default as userEvent } from '@testing-library/user-event';
+
+// Export act helper
+export { act };
+
+// Helper for async user interactions that may trigger state updates
+export const actAndWait = async (callback: () => Promise<void> | void) => {
+  await act(async () => {
+    await callback();
+  });
+};
 
 // Test data factories
 export const createTestUser = (overrides = {}) => ({

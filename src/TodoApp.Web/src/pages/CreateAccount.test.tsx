@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor, renderWithProviders, userEvent, NEW_USER_EMAIL, TEST_CODE } from '../test/test-utils';
+import { screen, waitFor, renderWithProviders, userEvent, act, NEW_USER_EMAIL, TEST_CODE } from '../test/test-utils';
 import { CreateAccount } from './CreateAccount';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
@@ -20,17 +20,23 @@ describe('CreateAccount', () => {
 
   beforeEach(() => {
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
-    useAuthStore.getState().setAwaitingRegistration(NEW_USER_EMAIL, TEST_CODE);
+    act(() => {
+      useAuthStore.getState().setAwaitingRegistration(NEW_USER_EMAIL, TEST_CODE);
+    });
   });
 
   afterEach(() => {
     vi.clearAllMocks();
-    useAuthStore.getState().logout();
+    act(() => {
+      useAuthStore.getState().logout();
+    });
   });
 
   it('redirects to login if unauthenticated', async () => {
     // Clear pending email
-    useAuthStore.getState().reset();
+    act(() => {
+      useAuthStore.getState().reset();
+    });
 
     renderWithProviders(<CreateAccount />);
 

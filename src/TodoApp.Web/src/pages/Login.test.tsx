@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { screen, waitFor, renderWithProviders, userEvent, TEST_EMAIL } from '../test/test-utils';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { screen, waitFor, renderWithProviders, userEvent, act, TEST_EMAIL } from '../test/test-utils';
 import { Login } from './Login';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
@@ -19,7 +19,9 @@ describe('Login', () => {
   beforeEach(() => {
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
     // Clear auth store
-    useAuthStore.getState().logout();
+    act(() => {
+      useAuthStore.getState().logout();
+    });
   });
 
   afterEach(() => {
