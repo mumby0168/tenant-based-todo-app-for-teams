@@ -1,9 +1,9 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { DashboardPage } from '../pages/dashboard.page';
 import { LoginPage } from '../pages/login.page';
 import { VerifyCodePage } from '../pages/verify-code.page';
-import { DashboardPage } from '../pages/dashboard.page';
 import { MailDevHelper } from '../support/maildev-helper';
-import { UserHelper, TestUser } from '../support/user-helper';
+import { TestUser, UserHelper } from '../support/user-helper';
 
 test.describe('Existing User Login', () => {
   let loginPage: LoginPage;
@@ -13,13 +13,7 @@ test.describe('Existing User Login', () => {
   let userHelper: UserHelper;
   let existingUser: TestUser;
 
-  test.beforeEach(async ({ page, context }) => {
-    // Set a flag to disable MSW before any scripts run
-    await context.addInitScript(() => {
-      // This runs before any page scripts
-      (window as unknown as { __PLAYWRIGHT_TEST__: boolean }).__PLAYWRIGHT_TEST__ = true;
-    });
-
+  test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     verifyPage = new VerifyCodePage(page);
     dashboardPage = new DashboardPage(page);

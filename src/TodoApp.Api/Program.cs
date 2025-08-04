@@ -10,6 +10,7 @@ using TodoApp.Api.Features.Auth.Repositories;
 using TodoApp.Api.Features.Auth.Services;
 using TodoApp.Api.Features.Auth.Validators;
 using TodoApp.Api.Features.HealthCheck;
+using TodoApp.Api.Features.TodoLists;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,6 +99,7 @@ app.UseAuthorization();
 
 app.MapHealthCheckEndpoints();
 app.MapAuthEndpoints();
+app.MapTodoListEndpoints();
 
 app.Run();
 

@@ -27,13 +27,17 @@ public class TestAuthenticationHandler : AuthenticationHandler<TestAuthenticatio
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        // Check for custom team ID in headers (for test control)
+        var customTeamId = Request.Headers["X-Test-Team-Id"].FirstOrDefault();
+        var teamId = customTeamId != null ? customTeamId : Options.TeamId.ToString();
+        
         // Create test claims based on configured options
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, Options.UserId.ToString()),
             new Claim(ClaimTypes.Email, Options.Email),
             new Claim(ClaimTypes.Name, Options.Name),
-            new Claim("team_id", Options.TeamId.ToString()),
+            new Claim("team_id", teamId),
             new Claim("team_name", "Test Team"),
             new Claim(ClaimTypes.Role, Options.Role)
         };

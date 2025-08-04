@@ -10,4 +10,5 @@ public class Team
     // Navigation properties
     public ICollection<TeamMembership> TeamMemberships { get; set; } = new List<TeamMembership>();
     public ICollection<Todo> Todos { get; set; } = new List<Todo>();
+    public ICollection<TodoList> TodoLists { get; set; } = new List<TodoList>();
 }

@@ -156,13 +156,18 @@ public abstract class IntegrationTestBase : IClassFixture<IntegrationTestFactory
     
     protected HttpClient CreateAuthenticatedClient(AuthResponse authResponse)
     {
-        return Factory.CreateClientWithTestAuth(
+        var client = Factory.CreateClientWithTestAuth(
             authResponse.User.Id,
             authResponse.Team.Id,
             authResponse.Team.Role,
             authResponse.User.Email,
             authResponse.User.DisplayName
         );
+        
+        // Add custom header to ensure the team ID is used correctly
+        client.DefaultRequestHeaders.Add("X-Test-Team-Id", authResponse.Team.Id.ToString());
+        
+        return client;
     }
     
     protected HttpClient CreateAuthenticatedClient(

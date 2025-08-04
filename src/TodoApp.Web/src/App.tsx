@@ -1,16 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { CssBaseline, ThemeProvider } from '@mui/material';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import { theme } from './theme/theme';
-import { queryClient } from './lib/query-client';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './components/Layout/AppLayout';
+import { NotificationSnackbar } from './components/NotificationSnackbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { queryClient } from './lib/query-client';
+import { CreateAccount } from './pages/CreateAccount';
 import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
+import { TodoLists } from './pages/TodoLists';
 import { VerifyCode } from './pages/VerifyCode';
-import { CreateAccount } from './pages/CreateAccount';
-import { NotificationSnackbar } from './components/NotificationSnackbar';
+import { theme } from './theme/theme';
 
 function App() {
   return (
@@ -39,7 +40,7 @@ function App() {
                 path="/lists"
                 element={
                   <ProtectedRoute>
-                    <div>Todo Lists Page (Coming Soon)</div>
+                    <TodoLists />
                   </ProtectedRoute>
                 }
               />
@@ -94,7 +95,7 @@ function App() {
           </Routes>
         </BrowserRouter>
         <NotificationSnackbar />
-        <ReactQueryDevtools initialIsOpen={false} />
+        <ReactQueryDevtools  buttonPosition='bottom-left' initialIsOpen={false} />
       </ThemeProvider>
     </QueryClientProvider>
   );
