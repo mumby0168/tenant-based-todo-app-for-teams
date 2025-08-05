@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor, renderWithProviders, userEvent, act, TEST_EMAIL } from '../test/test-utils';
-import { Login } from './Login';
 import { useNavigate } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '../stores/auth-store';
+import { act, renderWithProviders, screen, TEST_EMAIL, userEvent, waitFor } from '../test/test-utils';
+import { Login } from './Login';
 
 // Mock react-router-dom
 vi.mock('react-router-dom', async () => {
@@ -100,7 +100,7 @@ describe('Login', () => {
     const { http, HttpResponse } = await import('msw');
     
     server.use(
-      http.post('http://localhost:5050/api/v1/auth/request-code', () => {
+      http.post('/api/v1/auth/request-code', () => {
         return HttpResponse.json(
           { 
             title: 'Too Many Requests',

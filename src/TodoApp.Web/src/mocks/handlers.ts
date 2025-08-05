@@ -3,7 +3,7 @@ import { AUTH_CONSTANTS } from '../constants/auth.constants';
 
 export const handlers = [
   // Health check
-  http.get('http://localhost:5050/api/v1/health', () => {
+  http.get('/api/v1/health', () => {
     return HttpResponse.json({
       status: 'Healthy',
       timestamp: new Date().toISOString(),
@@ -12,7 +12,7 @@ export const handlers = [
   }),
 
   // Authentication endpoints
-  http.post('http://localhost:5050/api/v1/auth/request-code', async ({ request }) => {
+  http.post('/api/v1/auth/request-code', async ({ request }) => {
     const { email } = await request.json() as { email: string };
     
     console.log('Mock: Verification code requested for', email);
@@ -22,7 +22,7 @@ export const handlers = [
     });
   }),
 
-  http.post('http://localhost:5050/api/v1/auth/verify-code', async ({ request }) => {
+  http.post('/api/v1/auth/verify-code', async ({ request }) => {
     const { email, code } = await request.json() as { email: string; code: string };
     
     // Mock verification - accept code "123456"
@@ -57,7 +57,7 @@ export const handlers = [
     );
   }),
 
-  http.post('http://localhost:5050/api/v1/auth/complete-registration', async ({ request }) => {
+  http.post('/api/v1/auth/complete-registration', async ({ request }) => {
     const { displayName, teamName } = await request.json() as { displayName: string; teamName: string };
     
     return HttpResponse.json({
@@ -76,7 +76,7 @@ export const handlers = [
   }),
 
   // Todo lists endpoints - Match backend DTO structure
-  http.get('http://localhost:5050/api/v1/lists', () => {
+  http.get('/api/v1/lists', () => {
     return HttpResponse.json({
       todoLists: [ // Changed from 'lists' to 'todoLists' to match GetTodoListsResponse
         {
@@ -102,7 +102,7 @@ export const handlers = [
   }),
 
   // Team endpoints
-  http.get('http://localhost:5050/api/v1/team/members', () => {
+  http.get('/api/v1/team/members', () => {
     return HttpResponse.json({
       members: [
         {
