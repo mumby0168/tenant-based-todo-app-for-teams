@@ -1,5 +1,9 @@
 # Claude Code Development Guide
 
+## IMPORTANT RULES
+
+- DO NOT LEAVE CODE COMMENTS UNLESS ASKED, NEVER EVER, UNLESS ASKED
+
 ## Project Overview
 Multi-tenant todo application with team-based collaboration, built with production-ready patterns.
 

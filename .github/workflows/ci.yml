@@ -94,8 +94,8 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Install EF tools
-        run: dotnet tool install --global dotnet-ef
+      - name: Install Aspire CLI
+        run: dotnet workload install aspire
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -112,9 +112,15 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: ./src/TodoApp.Web
 
-      - name: Start Docker services
+      - name: Start Aspire services
         run: |
-          ./scripts/dev-start.sh
+          cd src/TodoApp.AppHost
+          dotnet run --detached &
+          # Wait for services to be ready
+          sleep 30
+          # Verify services are responding
+          curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:5050/health || echo "API health check failed"
+          curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:5180 || echo "Frontend health check failed"
 
       - name: Run E2E tests
         run: npm run test:e2e
@@ -132,4 +138,8 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: ./scripts/dev-stop.sh
+        run: |
+          # Stop any running dotnet processes
+          pkill -f "TodoApp.AppHost" || true
+          # Clean up any Docker containers that might have been started by Aspire
+          docker container prune -f || true
