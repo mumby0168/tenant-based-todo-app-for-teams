@@ -114,8 +114,7 @@ jobs:
 
       - name: Start Aspire services
         run: |
-          cd src/TodoApp.AppHost
-          dotnet run --detached &
+          aspire run --detached &
           # Wait for services to be ready
           sleep 30
           # Verify services are responding

@@ -21,7 +21,7 @@ Multi-tenant todo application with team-based collaboration, built with producti
 ## Development Commands
 ```bash
 # Frontend
-cd src/frontend
+cd src/TodoApp.Web
 npm install
 npm run dev         # Start dev server
 npm test           # Run tests
@@ -33,7 +33,13 @@ dotnet watch run   # Start with hot reload
 dotnet test        # Run tests
 dotnet ef migrations add <Name>  # Add migration
 
-# Docker
+# Aspire Orchestration (Local Development)
+aspire run          # Start all services (API, Frontend, PostgreSQL, MailDev)
+                    # API: http://localhost:5050
+                    # Frontend: http://localhost:5180
+                    # MailDev: http://localhost:1090
+
+# Legacy Docker (deprecated)
 docker compose up -d              # Start all services
 docker compose --profile backend up  # Backend only
 docker compose down -v           # Stop and clean
