@@ -1,7 +1,8 @@
 import axios, { AxiosError } from 'axios';
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api/v1';
+// Use relative URL for proxy support, or full URL for direct access
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

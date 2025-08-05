@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor, renderWithProviders, userEvent, act, TEST_EMAIL, TEST_CODE, EXISTING_USER_EMAIL, NEW_USER_EMAIL } from '../test/test-utils';
-import { VerifyCode } from './VerifyCode';
+import { http, HttpResponse } from 'msw';
 import { useNavigate } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '../stores/auth-store';
 import { server } from '../test/setup';
-import { http, HttpResponse } from 'msw';
+import { act, EXISTING_USER_EMAIL, NEW_USER_EMAIL, renderWithProviders, screen, TEST_CODE, TEST_EMAIL, userEvent, waitFor } from '../test/test-utils';
+import { VerifyCode } from './VerifyCode';
 
 // Mock react-router-dom
 vi.mock('react-router-dom', async () => {
@@ -195,7 +195,7 @@ describe('VerifyCode', () => {
     const user = userEvent.setup();
 
     server.use(
-      http.post('http://localhost:5050/api/v1/auth/verify-code', () => {
+      http.post('/api/v1/auth/verify-code', () => {
         return HttpResponse.json(
           {
             title: 'Invalid code',

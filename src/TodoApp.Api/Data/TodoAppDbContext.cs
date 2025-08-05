@@ -16,12 +16,6 @@ public class TodoAppDbContext : DbContext
     public DbSet<TodoList> TodoLists { get; set; }
     public DbSet<VerificationToken> VerificationTokens { get; set; }
     
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseSnakeCaseNamingConvention();
-        base.OnConfiguring(optionsBuilder);
-    }
-    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

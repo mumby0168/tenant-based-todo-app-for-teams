@@ -5,11 +5,15 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    port: process.env.PORT ? parseInt(process.env.PORT) : 5180,  // Use 5180 to match Aspire configuration
     proxy: {
       '/api': {
-        target: 'http://localhost:5050',
+        // Use Aspire service discovery environment variable, fallback to localhost for non-Aspire development
+        target: process.env.services__api__https__0 || 
+                process.env.services__api__http__0 || 
+                'http://localhost:5050',
         changeOrigin: true,
+        secure: false,  // Allow self-signed certificates in development
       },
     },
   },

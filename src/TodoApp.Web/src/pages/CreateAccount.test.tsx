@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor, renderWithProviders, userEvent, act, NEW_USER_EMAIL, TEST_CODE } from '../test/test-utils';
-import { CreateAccount } from './CreateAccount';
+import { http, HttpResponse } from 'msw';
 import { useNavigate } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '../stores/auth-store';
 import { server } from '../test/setup';
-import { http, HttpResponse } from 'msw';
+import { act, NEW_USER_EMAIL, renderWithProviders, screen, TEST_CODE, userEvent, waitFor } from '../test/test-utils';
+import { CreateAccount } from './CreateAccount';
 
 // Mock react-router-dom
 vi.mock('react-router-dom', async () => {
@@ -199,7 +199,7 @@ describe('CreateAccount', () => {
     const user = userEvent.setup();
 
     server.use(
-      http.post('http://localhost:5050/api/v1/auth/complete-registration', () => {
+      http.post('/api/v1/auth/complete-registration', () => {
         return HttpResponse.json(
           {
             title: 'Team name already exists',
@@ -244,7 +244,7 @@ describe('CreateAccount', () => {
 
     // Add delay to mock handler to test loading state
     server.use(
-      http.post('http://localhost:5050/api/v1/auth/complete-registration', async () => {
+      http.post('/api/v1/auth/complete-registration', async () => {
         await new Promise(resolve => setTimeout(resolve, 100));
         return HttpResponse.json({
           token: 'mock-jwt-token',
