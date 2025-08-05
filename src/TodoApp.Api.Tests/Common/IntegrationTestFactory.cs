@@ -49,16 +49,17 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
         // Initialize mock email service if not already done
         MockEmailService ??= new MockEmailService();
         
+        builder.ConfigureAppConfiguration((context, config) =>
+        {
+            // Override the connection string that Aspire uses
+            config.AddInMemoryCollection(new[]
+            {
+                new KeyValuePair<string, string?>("ConnectionStrings:todoapp-db", _connectionString)
+            });
+        });
+        
         builder.ConfigureServices(services =>
         {
-            // Remove the existing DbContext registration
-            services.RemoveAll<DbContextOptions<TodoAppDbContext>>();
-            services.RemoveAll<TodoAppDbContext>();
-            
-            // Add our test database
-            services.AddDbContext<TodoAppDbContext>(options =>
-                options.UseNpgsql(_connectionString));
-            
             // Replace email service with mock
             services.RemoveAll<IEmailService>();
             services.AddSingleton<IEmailService>(MockEmailService);
