@@ -78,7 +78,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Install Aspire CLI
-        run: dotnet workload install aspire
+        run: curl -sSL https://aspire.dev/install.sh | bash
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
