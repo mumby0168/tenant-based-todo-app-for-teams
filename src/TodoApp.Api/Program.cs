@@ -34,7 +34,7 @@ builder.Services.Configure<EmailOptions>(options =>
 {
     // Configure email options with Aspire service discovery
     builder.Configuration.GetSection(EmailOptions.SectionName).Bind(options);
-    
+
     // Override with Aspire-provided MailDev SMTP endpoint if available
     var maildevSmtp = builder.Configuration["services:maildev:smtp:0"];
     if (!string.IsNullOrEmpty(maildevSmtp))
@@ -50,7 +50,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
 
-var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() 
+var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("JWT configuration is missing");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -97,12 +97,13 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// Apply database migrations automatically on startup
-using (var scope = app.Services.CreateScope())
+if (app.Environment.EnvironmentName != "Testing")
 {
+    using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<TodoAppDbContext>();
     context.Database.Migrate();
 }
+
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
