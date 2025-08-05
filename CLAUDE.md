@@ -10,7 +10,7 @@ Multi-tenant todo application with team-based collaboration, built with producti
 ## Tech Stack
 - **Frontend**: React 18, TypeScript, Material-UI v5, React Query, Zustand, Vite
 - **Backend**: .NET 8 Minimal APIs, Entity Framework Core, PostgreSQL, JWT Auth
-- **Infrastructure**: Docker, Docker Compose, GitHub Actions
+- **Infrastructure**: .NET Aspire, GitHub Actions
 
 ## Key Architecture Decisions
 1. **Multi-tenancy**: Users can belong to multiple teams with different roles per team
@@ -39,10 +39,6 @@ aspire run          # Start all services (API, Frontend, PostgreSQL, MailDev)
                     # Frontend: http://localhost:5180
                     # MailDev: http://localhost:1090
 
-# Legacy Docker (deprecated)
-docker compose up -d              # Start all services
-docker compose --profile backend up  # Backend only
-docker compose down -v           # Stop and clean
 ```
 
 ## Code Patterns
