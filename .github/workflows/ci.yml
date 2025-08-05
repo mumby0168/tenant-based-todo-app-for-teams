@@ -14,21 +14,6 @@ jobs:
   backend-tests:
     name: Backend Tests
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: todoapp
-          POSTGRES_PASSWORD: todoapp_password
-          POSTGRES_DB: todoapp_test_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
 
     steps:
       - name: Checkout code
@@ -46,9 +31,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test --no-build --configuration Release --verbosity normal
-        env:
-          ConnectionStrings__DefaultConnection: Host=localhost;Database=todoapp_test_db;Username=todoapp;Password=todoapp_password
+        run: dotnet test --no-build --configuration Release --verbosity normal                  
 
   frontend-tests:
     name: Frontend Tests and Linting
@@ -108,18 +91,13 @@ jobs:
         run: npm ci
         working-directory: ./src/TodoApp.Web
 
-      - name: Install Playwright
-        run: npx playwright install --with-deps chromium
-        working-directory: ./src/TodoApp.Web
-
       - name: Start Aspire services
         run: |
-          aspire run --detached &
-          # Wait for services to be ready
-          sleep 30
-          # Verify services are responding
-          curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:5050/health || echo "API health check failed"
-          curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:5180 || echo "Frontend health check failed"
+          aspire run --detached 
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+        working-directory: ./src/TodoApp.Web         
 
       - name: Run E2E tests
         run: npm run test:e2e
