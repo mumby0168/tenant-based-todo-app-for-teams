@@ -92,8 +92,7 @@ jobs:
         working-directory: ./src/TodoApp.Web
 
       - name: Start Aspire services
-        run: |
-          aspire run --detached 
+        run: aspire run --detached 
 
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
